@@ -13,12 +13,13 @@ The terminal will be split in at least 3 separate windows. Name window is used i
 |                            |                            |
 | Shows tasks for today.     |                            |
 |----------------------------|-----------------------------
-| Statistics: (of selected   | To be decided what         |
-|              task)         |   goes in this section.    |
-|  Strike: 2 days in a row.  |                            |
-|  This week: 3 times        |                            |
-|  This month: 10 times      |                            |
-|  This year: 30 times       |                            |
+| Strike statistics:         | Completion statistics:     |
+|                            |                            |
+|   Current: 2 days          | This week: 2 times         |
+|   Best monthly: 5 days     | This month: 10 times       |
+|   Longest: 10 days         | This year: 50 times        |
+|                            |                            |
+|                            |                            |
 |----------------------------|----------------------------|
 ```
 ## Navigation
@@ -30,14 +31,14 @@ e - Edit data in current window. Allows to edit task short name or description.
         After edit, user press enter and a pop up with confirm changes 'y/n' will come. <br>
 a/c - To be decided if both (add/create) - creates new habit task. Will be based on popup/floating windows that ask you questions
       like: enter (short name), enter long description. <br>
-      Alternatively this will make clear terminal window and open a new one with empty task short name and description.
+      Alternatively this will make clear terminal window and open a new one with empty task short name and description. <br>
       User will move over short name and description using hl keys press 'i' (insert) to add data.  <br>
 d - Deletes currently selected task, a confirmation window will pop up. <br>
 s - Saves changes that were made during current session (to be decided if this will be actually handled or saves will be done
-automatically).
-r - Restart session (revert), reverts all (or last) changes that were done during 
+automatically). <br>
+r - Restart session (revert), reverts all (or last) changes that were done before saving or after last save (undo?). <br>
 p - period (to be decided), changes period that we want to manage (by default daily), but some tasks could be defined to be 
-monthly, yearly etc. for example monthly task pay this month bills.
+monthly, yearly etc. for example monthly task pay this month bills. <br>
 ## Consistent state 
 The app should keep changes that were save in the initial (stage), possibly each change should be kept even if app is restarted
 unless declined. Initial implementation will possibly keep changes in local text file like json or csv. Later it might be moved
