@@ -13,15 +13,25 @@ type Task struct {
 	description       string
 	creationDate      time.Time
 	completionHistory []time.Time
+	getTime           func() time.Time
 }
 
-// NewTask constructs Task based on given name and description.
 func NewTask(name, description string) Task {
+	return NewTaskWithCustomTime(name, description, time.Now)
+}
+
+// NewTaskWithCustomTime constructs Task based on given name, description and time returning function.
+func NewTaskWithCustomTime(name, description string, getTime func() time.Time) Task {
+	if getTime == nil {
+		getTime = time.Now
+	}
+
 	return Task{
 		name,
 		description,
-		time.Now(),
+		getTime(),
 		make([]time.Time, 0),
+		getTime,
 	}
 }
 
@@ -30,23 +40,23 @@ func (task Task) GetCompletionHistory() []time.Time {
 	return task.completionHistory
 }
 
-// MakeTaskCompleted adds current time (time.Now()) to the completionHistory if it wasn't completed yet.
+// MakeTaskCompleted adds current time (getTime()) to the completionHistory if it wasn't completed yet.
 // Each task can be completed once a day.
 func (task *Task) MakeTaskCompleted() {
 	if l := len(task.completionHistory); l > 0 {
 		lastComplete := task.completionHistory[l-1]
-		if areSameDates(time.Now(), lastComplete) {
+		if areSameDates(task.getTime(), lastComplete) {
 			return
 		}
 	}
 
-	task.completionHistory = append(task.completionHistory, time.Now())
+	task.completionHistory = append(task.completionHistory, task.getTime())
 }
 
 // WasCompletedToday returns whether the Task t was completed at the day pointed
 // by time.Now.
 func (task Task) WasCompletedToday() bool {
-	return task.WasCompletedAtDay(time.Now())
+	return task.WasCompletedAtDay(task.getTime())
 }
 
 // WasCompletedAtDay returns whether the Task tk was completed at the
