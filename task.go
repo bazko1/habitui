@@ -9,11 +9,11 @@ type TaskList []Task
 
 // Task is an occurring event that has its own name identifier.
 type Task struct {
-	name              string
-	description       string
-	creationDate      time.Time
-	completionHistory []time.Time
-	getTime           func() time.Time
+	Name              string
+	Description       string
+	CreationDate      time.Time
+	CompletionHistory []time.Time
+	GetTime           func() time.Time
 }
 
 func NewTask(name, description string) Task {
@@ -35,34 +35,29 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 	}
 }
 
-// GetCompletionHistory returns list of task completion time dates.
-func (task Task) GetCompletionHistory() []time.Time {
-	return task.completionHistory
-}
-
-// MakeTaskCompleted adds current time (getTime()) to the completionHistory if it wasn't completed yet.
+// MakeTaskCompleted adds current time (getTime()) to the CompletionHistory if it wasn't completed yet.
 // Each task can be completed once a day.
 func (task *Task) MakeTaskCompleted() {
-	if l := len(task.completionHistory); l > 0 {
-		lastComplete := task.completionHistory[l-1]
-		if areSameDates(task.getTime(), lastComplete) {
+	if l := len(task.CompletionHistory); l > 0 {
+		lastComplete := task.CompletionHistory[l-1]
+		if areSameDates(task.GetTime(), lastComplete) {
 			return
 		}
 	}
 
-	task.completionHistory = append(task.completionHistory, task.getTime())
+	task.CompletionHistory = append(task.CompletionHistory, task.GetTime())
 }
 
 // WasCompletedToday returns whether the Task t was completed at the day pointed
 // by time.Now.
 func (task Task) WasCompletedToday() bool {
-	return task.WasCompletedAtDay(task.getTime())
+	return task.WasCompletedAtDay(task.GetTime())
 }
 
 // WasCompletedAtDay returns whether the Task tk was completed at the
 // day pointed time tme.
 func (task Task) WasCompletedAtDay(tme time.Time) bool {
-	for _, completion := range task.completionHistory {
+	for _, completion := range task.CompletionHistory {
 		if areSameDates(completion, tme) {
 			return true
 		}

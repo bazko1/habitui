@@ -27,11 +27,11 @@ func TestTaskCompletionSingleDay(t *testing.T) {
 	task.MakeTaskCompleted()
 	task.MakeTaskCompleted()
 
-	if len(task.GetCompletionHistory()) == 0 {
+	if len(task.CompletionHistory) == 0 {
 		t.Fatal("Task completion wasn't archived")
 	}
 
-	if len(task.GetCompletionHistory()) > 1 {
+	if len(task.CompletionHistory) > 1 {
 		t.Fatal("Task shouldn't be completed twice a day")
 	}
 
@@ -55,7 +55,7 @@ func TestTaskWithChangingDay(t *testing.T) {
 	dit.AddDay()
 	task.MakeTaskCompleted()
 
-	if len(task.GetCompletionHistory()) != 3 {
-		t.Fatalf("Task completion is %d when it shoudld be 3", len(task.GetCompletionHistory()))
+	if len(task.CompletionHistory) != 3 {
+		t.Fatalf("Task completion is %d when it shoudld be 3", len(task.CompletionHistory))
 	}
 }
