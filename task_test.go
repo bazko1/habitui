@@ -27,11 +27,14 @@ func TestTaskCompletionSingleDay(t *testing.T) {
 	task.MakeTaskCompleted()
 	task.MakeTaskCompleted()
 
-	if len(task.CompletionHistory) == 0 {
+	y, m, _ := time.Now().Date()
+	monthCompletions := task.MonthCompletions(y, m)
+
+	if len(monthCompletions) == 0 {
 		t.Fatal("Task completion wasn't archived")
 	}
 
-	if len(task.CompletionHistory) > 1 {
+	if len(monthCompletions) > 1 {
 		t.Fatal("Task shouldn't be completed twice a day")
 	}
 
@@ -43,7 +46,8 @@ func TestTaskCompletionSingleDay(t *testing.T) {
 func TestTaskWithChangingDay(t *testing.T) {
 	t.Parallel()
 
-	dit := dayIncreasingTime{time.Now()}
+	// new year new me resolution
+	dit := dayIncreasingTime{time.Date(2000, time.January, 1, 12, 0, 0, 0, time.UTC)}
 	task := habitui.NewTaskWithCustomTime("test", "test description", dit.Now)
 
 	dit.AddDay()
@@ -55,7 +59,10 @@ func TestTaskWithChangingDay(t *testing.T) {
 	dit.AddDay()
 	task.MakeTaskCompleted()
 
-	if len(task.CompletionHistory) != 3 {
-		t.Fatalf("Task completion is %d when it shoudld be 3", len(task.CompletionHistory))
+	y, m, _ := dit.CurrentTime.Date()
+	monthCompletions := task.MonthCompletions(y, m)
+
+	if len(monthCompletions) != 3 {
+		t.Fatalf("Task completion is %d when it shoudld be 3", len(monthCompletions))
 	}
 }

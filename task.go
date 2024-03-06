@@ -1,6 +1,7 @@
 package habitui
 
 import (
+	"slices"
 	"time"
 )
 
@@ -8,12 +9,13 @@ import (
 type TaskList []Task
 
 // Task is an occurring event that has its own name identifier.
+// Each task can be completed once a day.
 type Task struct {
-	Name              string
-	Description       string
-	CreationDate      time.Time
-	CompletionHistory []time.Time
-	GetTime           func() time.Time
+	Name                 string
+	Description          string
+	CreationDate         time.Time
+	YearlyTaskCompletion YearlyTaskCompletion
+	GetTime              func() time.Time
 }
 
 func NewTask(name, description string) Task {
@@ -30,45 +32,69 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 		name,
 		description,
 		getTime(),
-		make([]time.Time, 0),
+		make(YearlyTaskCompletion),
 		getTime,
 	}
 }
 
-// MakeTaskCompleted adds current time (getTime()) to the CompletionHistory if it wasn't completed yet.
+// MakeTaskCompleted adds current time (getTime()) to the completion history if it wasn't completed yet.
 // Each task can be completed once a day.
 func (task *Task) MakeTaskCompleted() {
-	if l := len(task.CompletionHistory); l > 0 {
-		lastComplete := task.CompletionHistory[l-1]
-		if areSameDates(task.GetTime(), lastComplete) {
-			return
-		}
+	now := task.GetTime()
+
+	completionsThisYear, exists := task.YearlyTaskCompletion[now.Year()]
+	if !exists {
+		completionsThisYear = make(MonthlyTaskCompletion)
+		task.YearlyTaskCompletion[now.Year()] = completionsThisYear
+		completionsThisYear[now.Month()] = []time.Time{now}
+
+		return
 	}
 
-	task.CompletionHistory = append(task.CompletionHistory, task.GetTime())
+	completionsThisMonth, exists := completionsThisYear[now.Month()]
+	if !exists {
+		completionsThisYear[now.Month()] = []time.Time{now}
+
+		return
+	}
+
+	if lastComplete := completionsThisMonth[len(completionsThisMonth)-1]; !AreSameDates(now, lastComplete) {
+		completionsThisYear[now.Month()] = append(completionsThisMonth, now)
+	}
 }
 
-// WasCompletedToday returns whether the Task t was completed at the day pointed
-// by time.Now.
+// MonthCompletions returns task completion at given year and month.
+func (task Task) MonthCompletions(year int, month time.Month) []time.Time {
+	completionsYear, exists := task.YearlyTaskCompletion[year]
+	if !exists {
+		return nil
+	}
+
+	return completionsYear[month]
+}
+
+// WasCompletedAt returns whether the Task was completed at the given date.
+func (task Task) WasCompletedAt(year int, month time.Month, day int) bool {
+	mcmpl := task.MonthCompletions(year, month)
+	if mcmpl == nil {
+		return false
+	}
+
+	atDate := time.Date(year, month, day, 0, 0, 0, 0, &time.Location{})
+
+	return slices.ContainsFunc(mcmpl, func(t time.Time) bool { return AreSameDates(t, atDate) })
+}
+
+// WasCompletedToday returns whether the Task was completed.
 func (task Task) WasCompletedToday() bool {
-	return task.WasCompletedAtDay(task.GetTime())
+	y, m, d := task.GetTime().Date()
+
+	return task.WasCompletedAt(y, m, d)
 }
 
-// WasCompletedAtDay returns whether the Task tk was completed at the
-// day pointed time tme.
-func (task Task) WasCompletedAtDay(tme time.Time) bool {
-	for _, completion := range task.CompletionHistory {
-		if areSameDates(completion, tme) {
-			return true
-		}
-	}
-
-	return false
-}
-
-// areSameDates is a helper function that checks if t1 t2 time.Time
+// AreSameDates is a helper function that checks if t1 t2 time.Time
 // have the same day date meaning year, month and day.
-func areSameDates(one, other time.Time) bool {
+func AreSameDates(one, other time.Time) bool {
 	type date struct {
 		y int
 		m time.Month
