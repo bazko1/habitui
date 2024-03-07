@@ -16,6 +16,8 @@ type Task struct {
 	CreationDate         time.Time
 	YearlyTaskCompletion YearlyTaskCompletion
 	GetTime              func() time.Time
+	LastTimeCompleted    time.Time
+	CurrentStrike        uint
 }
 
 func NewTask(name, description string) Task {
@@ -34,6 +36,8 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 		getTime(),
 		make(YearlyTaskCompletion),
 		getTime,
+		time.Time{},
+		0,
 	}
 }
 
@@ -41,6 +45,20 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 // Each task can be completed once a day.
 func (task *Task) MakeTaskCompleted() {
 	now := task.GetTime()
+
+	if AreSameDates(now, task.LastTimeCompleted) {
+		return
+	}
+
+	if task.LastTimeCompleted.IsZero() {
+		task.CurrentStrike = 1
+	}
+
+	if AreSameDates(now, task.LastTimeCompleted.AddDate(0, 0, 1)) {
+		task.CurrentStrike++
+	}
+
+	task.LastTimeCompleted = now
 
 	completionsThisYear, exists := task.YearlyTaskCompletion[now.Year()]
 	if !exists {
@@ -63,8 +81,8 @@ func (task *Task) MakeTaskCompleted() {
 	}
 }
 
-// MonthCompletions returns task completion at given year and month.
-func (task Task) MonthCompletions(year int, month time.Month) []time.Time {
+// MonthCompletionTime returns task completion at given year and month.
+func (task Task) MonthCompletionTime(year int, month time.Month) []time.Time {
 	completionsYear, exists := task.YearlyTaskCompletion[year]
 	if !exists {
 		return nil
@@ -75,7 +93,7 @@ func (task Task) MonthCompletions(year int, month time.Month) []time.Time {
 
 // WasCompletedAt returns whether the Task was completed at the given date.
 func (task Task) WasCompletedAt(year int, month time.Month, day int) bool {
-	mcmpl := task.MonthCompletions(year, month)
+	mcmpl := task.MonthCompletionTime(year, month)
 	if mcmpl == nil {
 		return false
 	}
