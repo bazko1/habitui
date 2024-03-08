@@ -92,4 +92,10 @@ func TestTaskWithChangingDay(t *testing.T) {
 	if task.CurrentWeekCompletion() != 0 {
 		t.Fatalf("Task should be completed 0 times this week while it returned %d", task.CurrentStrike())
 	}
+
+	task.MakeTaskCompleted()
+
+	if task.CurrentMonthCompletion() != 4 {
+		t.Fatalf("Task should be completed 4 times this month while it returned %d", task.CurrentStrike())
+	}
 }

@@ -12,7 +12,24 @@ type MonthlyTaskCompletion map[time.Month][]time.Time
 // YearlyTaskCompletion keeps a record of MonthlyTaskCompletion for each year.
 type YearlyTaskCompletion map[int]MonthlyTaskCompletion
 
-// Returns number of completion over the week represented by given date.
+// Returns number of completions over the month represented by given year and month.
+func (task Task) MonthCompletion(year int, month time.Month) int {
+	mcp := task.MonthCompletionTime(year, month)
+	if mcp == nil {
+		return 0
+	}
+
+	return len(mcp)
+}
+
+func (task Task) CurrentMonthCompletion() int {
+	y, m, _ := task.GetTime().Date()
+
+	return task.MonthCompletion(y, m)
+}
+
+// Returns number of completions over the week represented by given date.
+// Week is previous Monday up to given date.
 func (task Task) WeekCompletion(year int, month time.Month, day int) int {
 	mcp := task.MonthCompletionTime(year, month)
 	if mcp == nil {
@@ -46,6 +63,8 @@ func (task Task) WeekCompletion(year int, month time.Month, day int) int {
 	return counter
 }
 
+// CurrentWeekCompletion returns number of task completions over the whole week up to
+// current day. The week in this sense is treated as last Monday till current day.
 func (task Task) CurrentWeekCompletion() int {
 	y, m, d := task.GetTime().Date()
 
