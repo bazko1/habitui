@@ -12,6 +12,25 @@ type MonthlyTaskCompletion map[time.Month][]time.Time
 // YearlyTaskCompletion keeps a record of MonthlyTaskCompletion for each year.
 type YearlyTaskCompletion map[int]MonthlyTaskCompletion
 
+func (task Task) CurrentYearCompletion() int {
+	return task.YearCompletion(task.GetTime().Year())
+}
+
+// Returns number of completions over the given year.
+func (task Task) YearCompletion(year int) int {
+	completionsYear, exists := task.YearlyTaskCompletion[year]
+	if !exists {
+		return 0
+	}
+
+	completions := 0
+	for _, monthCompletions := range completionsYear {
+		completions += len(monthCompletions)
+	}
+
+	return completions
+}
+
 // Returns number of completions over the month represented by given year and month.
 func (task Task) MonthCompletion(year int, month time.Month) int {
 	mcp := task.MonthCompletionTime(year, month)
