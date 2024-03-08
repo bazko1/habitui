@@ -17,7 +17,7 @@ type Task struct {
 	YearlyTaskCompletion YearlyTaskCompletion
 	GetTime              func() time.Time
 	LastTimeCompleted    time.Time
-	CurrentStrike        uint
+	currentStrike        uint
 }
 
 func NewTask(name, description string) Task {
@@ -50,12 +50,12 @@ func (task *Task) MakeTaskCompleted() {
 		return
 	}
 
-	if task.LastTimeCompleted.IsZero() {
-		task.CurrentStrike = 1
+	if task.LastTimeCompleted.IsZero() || !task.IsStrikeContinued() {
+		task.currentStrike = 1
 	}
 
 	if AreSameDates(now, task.LastTimeCompleted.AddDate(0, 0, 1)) {
-		task.CurrentStrike++
+		task.currentStrike++
 	}
 
 	task.LastTimeCompleted = now
@@ -108,6 +108,21 @@ func (task Task) WasCompletedToday() bool {
 	y, m, d := task.GetTime().Date()
 
 	return task.WasCompletedAt(y, m, d)
+}
+
+func (task Task) CurrentStrike() uint {
+	if task.IsStrikeContinued() {
+		return task.currentStrike
+	}
+
+	return 0
+}
+
+// IsStrikeContinued returns whether strike was broken
+// meaning there was over 1 day break from finishing it.
+func (task Task) IsStrikeContinued() bool {
+	return AreSameDates(task.GetTime(), task.LastTimeCompleted) ||
+		AreSameDates(task.GetTime().AddDate(0, 0, -1), task.LastTimeCompleted)
 }
 
 // AreSameDates is a helper function that checks if t1 t2 time.Time

@@ -63,10 +63,17 @@ func TestTaskWithChangingDay(t *testing.T) {
 	monthCompletions := task.MonthCompletionTime(y, m)
 
 	if len(monthCompletions) != 3 {
-		t.Fatalf("Task completion is %d when it shoudld be 3", len(monthCompletions))
+		t.Fatalf("Task completion is %d when it should be 3", len(monthCompletions))
 	}
 
-	if task.CurrentStrike != 3 {
-		t.Fatalf("Task strike is %d when it shoudld be 3", task.CurrentStrike)
+	if task.CurrentStrike() != 3 {
+		t.Fatalf("Task strike is %d when it should be 3", task.CurrentStrike())
+	}
+
+	dit.AddDay()
+	dit.AddDay()
+	// 2 days passed and task wasn't completed so strike should be zeroed.
+	if task.CurrentStrike() != 0 {
+		t.Fatalf("Task strike is %d when it should be 0", task.CurrentStrike())
 	}
 }
