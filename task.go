@@ -11,13 +11,15 @@ type TaskList []Task
 // Task is an occurring event that has its own name identifier.
 // Each task can be completed once a day.
 type Task struct {
-	Name                 string
-	Description          string
-	CreationDate         time.Time
+	Name         string
+	Description  string
+	CreationDate time.Time
+	GetTime      func() time.Time
+
 	YearlyTaskCompletion YearlyTaskCompletion
-	GetTime              func() time.Time
 	LastTimeCompleted    time.Time
 	currentStrike        uint
+	YearlyBestStrike     YearlyBestStrike
 }
 
 func NewTask(name, description string) Task {
@@ -34,10 +36,11 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 		name,
 		description,
 		getTime(),
-		make(YearlyTaskCompletion),
 		getTime,
+		make(YearlyTaskCompletion),
 		time.Time{},
 		0,
+		make(YearlyBestStrike),
 	}
 }
 
@@ -60,21 +63,15 @@ func (task *Task) MakeTaskCompleted() {
 
 	task.LastTimeCompleted = now
 
-	completionsThisYear, exists := task.YearlyTaskCompletion[now.Year()]
-	if !exists {
-		completionsThisYear = make(MonthlyTaskCompletion)
-		task.YearlyTaskCompletion[now.Year()] = completionsThisYear
-		completionsThisYear[now.Month()] = []time.Time{now}
-
+	if checkHistoricRecodExistOrCreate(
+		task.YearlyTaskCompletion,
+		now.Year(),
+		now.Month(), []time.Time{now}) {
 		return
 	}
 
-	completionsThisMonth, exists := completionsThisYear[now.Month()]
-	if !exists {
-		completionsThisYear[now.Month()] = []time.Time{now}
-
-		return
-	}
+	completionsThisYear := task.YearlyTaskCompletion[now.Year()]
+	completionsThisMonth := completionsThisYear[now.Month()]
 
 	if lastComplete := completionsThisMonth[len(completionsThisMonth)-1]; !AreSameDates(now, lastComplete) {
 		completionsThisYear[now.Month()] = append(completionsThisMonth, now)

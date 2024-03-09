@@ -4,13 +4,23 @@ import (
 	"time"
 )
 
-const WeekDuration int = 7
+const (
+	numberOfMonths int = 12
+)
 
 // MonthlyTaskCompletion is a record of task completion for each month.
 type MonthlyTaskCompletion map[time.Month][]time.Time
 
 // YearlyTaskCompletion keeps a record of MonthlyTaskCompletion for each year.
 type YearlyTaskCompletion map[int]MonthlyTaskCompletion
+
+// MonthlyBestStrike is type for storing task best longest strike
+// that happened over a month.
+type MonthlyBestStrike map[time.Month][]uint
+
+// YearlyBestStrike stores a record of MonthlyBestStrike
+// for each year.
+type YearlyBestStrike map[int]MonthlyBestStrike
 
 func (task Task) CurrentYearCompletion() int {
 	return task.YearCompletion(task.GetTime().Year())
@@ -88,4 +98,28 @@ func (task Task) CurrentWeekCompletion() int {
 	y, m, d := task.GetTime().Date()
 
 	return task.WeekCompletion(y, m, d)
+}
+
+func checkHistoricRecodExistOrCreate[H ~map[int]M, M ~map[time.Month]R,
+	R uint | []time.Time](
+	yearlyHistory H, year int,
+	month time.Month, record R,
+) bool {
+	completionsThisYear, exists := yearlyHistory[year]
+	if !exists {
+		completionsThisYear = make(M, numberOfMonths)
+		yearlyHistory[year] = completionsThisYear
+		completionsThisYear[month] = record
+
+		return true
+	}
+
+	_, exists = completionsThisYear[month]
+	if !exists {
+		completionsThisYear[month] = record
+
+		return true
+	}
+
+	return false
 }
