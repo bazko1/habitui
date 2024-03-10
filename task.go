@@ -1,6 +1,7 @@
 package habitui
 
 import (
+	"math"
 	"slices"
 	"time"
 )
@@ -54,7 +55,16 @@ func (task *Task) MakeTaskCompleted() {
 	}
 
 	if task.LastTimeCompleted.IsZero() || !task.IsStrikeContinued() {
-		task.currentStrike = 1
+		task.currentStrike = uint(math.Max(1, float64(task.currentStrike)))
+
+		initializeDateMaps(task.YearlyBestStrike, now.Year(),
+			now.Month(), 1)
+
+		monthBestStrike := task.YearlyBestStrike[now.Year()][now.Month()]
+
+		if task.currentStrike > monthBestStrike {
+			task.YearlyBestStrike[now.Year()][now.Month()] = monthBestStrike
+		}
 	}
 
 	if AreSameDates(now, task.LastTimeCompleted.AddDate(0, 0, 1)) {
@@ -63,7 +73,7 @@ func (task *Task) MakeTaskCompleted() {
 
 	task.LastTimeCompleted = now
 
-	if checkHistoricRecodExistOrCreate(
+	if initializeDateMaps(
 		task.YearlyTaskCompletion,
 		now.Year(),
 		now.Month(), []time.Time{now}) {
