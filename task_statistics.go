@@ -28,7 +28,7 @@ func (task Task) CurrentYearCompletion() int {
 
 // Returns number of completions over the given year.
 func (task Task) YearCompletion(year int) int {
-	completionsYear, exists := task.YearlyTaskCompletion[year]
+	completionsYear, exists := task.yearlyTaskCompletion[year]
 	if !exists {
 		return 0
 	}
@@ -98,6 +98,42 @@ func (task Task) CurrentWeekCompletion() int {
 	y, m, d := task.GetTime().Date()
 
 	return task.WeekCompletion(y, m, d)
+}
+
+func (task Task) YearBestStrike(year int) uint {
+	monthlyStrikes, exist := task.yearlyBestStrike[year]
+	if !exist {
+		return 0
+	}
+
+	var max uint
+
+	for _, strike := range monthlyStrikes {
+		if strike > max {
+			max = strike
+		}
+	}
+
+	return max
+}
+
+func (task Task) MonthBestStrike(year int, month time.Month) uint {
+	monthlyStrikes, exist := task.yearlyBestStrike[year]
+	if !exist {
+		return 0
+	}
+
+	return monthlyStrikes[month]
+}
+
+func (task Task) CurrentMonthBestStrike() uint {
+	y, m, _ := task.GetTime().Date()
+
+	return task.MonthBestStrike(y, m)
+}
+
+func (task Task) CurrentYearBestStrike() uint {
+	return task.YearBestStrike(task.GetTime().Year())
 }
 
 // initializeDateMaps checks if YearlyBestStrike or YearlyTaskHistory

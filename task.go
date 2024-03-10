@@ -1,7 +1,6 @@
 package habitui
 
 import (
-	"math"
 	"slices"
 	"time"
 )
@@ -17,10 +16,10 @@ type Task struct {
 	CreationDate time.Time
 	GetTime      func() time.Time
 
-	YearlyTaskCompletion YearlyTaskCompletion
-	LastTimeCompleted    time.Time
+	yearlyTaskCompletion YearlyTaskCompletion
+	lastTimeCompleted    time.Time
 	currentStrike        uint
-	YearlyBestStrike     YearlyBestStrike
+	yearlyBestStrike     YearlyBestStrike
 }
 
 func NewTask(name, description string) Task {
@@ -50,37 +49,41 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 func (task *Task) MakeTaskCompleted() {
 	now := task.GetTime()
 
-	if AreSameDates(now, task.LastTimeCompleted) {
+	if AreSameDates(now, task.lastTimeCompleted) {
 		return
 	}
 
-	if task.LastTimeCompleted.IsZero() || !task.IsStrikeContinued() {
-		task.currentStrike = uint(math.Max(1, float64(task.currentStrike)))
-
-		initializeDateMaps(task.YearlyBestStrike, now.Year(),
+	if task.lastTimeCompleted.IsZero() {
+		initializeDateMaps(task.yearlyBestStrike, now.Year(),
 			now.Month(), 1)
 
-		monthBestStrike := task.YearlyBestStrike[now.Year()][now.Month()]
-
-		if task.currentStrike > monthBestStrike {
-			task.YearlyBestStrike[now.Year()][now.Month()] = monthBestStrike
-		}
+		task.currentStrike = 1
 	}
 
-	if AreSameDates(now, task.LastTimeCompleted.AddDate(0, 0, 1)) {
+	if !task.IsStrikeContinued() {
+		task.currentStrike = 1
+	}
+
+	if AreSameDates(now, task.lastTimeCompleted.AddDate(0, 0, 1)) {
 		task.currentStrike++
 	}
 
-	task.LastTimeCompleted = now
+	monthBestStrike := task.yearlyBestStrike[now.Year()][now.Month()]
+
+	if task.currentStrike > monthBestStrike {
+		task.yearlyBestStrike[now.Year()][now.Month()] = task.currentStrike
+	}
+
+	task.lastTimeCompleted = now
 
 	if initializeDateMaps(
-		task.YearlyTaskCompletion,
+		task.yearlyTaskCompletion,
 		now.Year(),
 		now.Month(), []time.Time{now}) {
 		return
 	}
 
-	completionsThisYear := task.YearlyTaskCompletion[now.Year()]
+	completionsThisYear := task.yearlyTaskCompletion[now.Year()]
 	completionsThisMonth := completionsThisYear[now.Month()]
 
 	if lastComplete := completionsThisMonth[len(completionsThisMonth)-1]; !AreSameDates(now, lastComplete) {
@@ -90,7 +93,7 @@ func (task *Task) MakeTaskCompleted() {
 
 // MonthCompletionTime returns task completion at given year and month.
 func (task Task) MonthCompletionTime(year int, month time.Month) []time.Time {
-	completionsYear, exists := task.YearlyTaskCompletion[year]
+	completionsYear, exists := task.yearlyTaskCompletion[year]
 	if !exists {
 		return nil
 	}
@@ -128,8 +131,8 @@ func (task Task) CurrentStrike() uint {
 // IsStrikeContinued returns whether strike was broken
 // meaning there was over 1 day break from finishing it.
 func (task Task) IsStrikeContinued() bool {
-	return AreSameDates(task.GetTime(), task.LastTimeCompleted) ||
-		AreSameDates(task.GetTime().AddDate(0, 0, -1), task.LastTimeCompleted)
+	return AreSameDates(task.GetTime(), task.lastTimeCompleted) ||
+		AreSameDates(task.GetTime().AddDate(0, 0, -1), task.lastTimeCompleted)
 }
 
 // AreSameDates is a helper function that checks if t1 t2 time.Time

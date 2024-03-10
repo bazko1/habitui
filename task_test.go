@@ -59,11 +59,8 @@ func TestTaskWithChangingDay(t *testing.T) {
 	dit.AddDay()
 	task.MakeTaskCompleted()
 
-	year, month, _ := dit.CurrentTime.Date()
-	monthCompletions := task.MonthCompletionTime(year, month)
-
-	if len(monthCompletions) != 3 {
-		t.Fatalf("Task completion is %d when it should be 3", len(monthCompletions))
+	if compl := task.CurrentMonthCompletion(); compl != 3 {
+		t.Fatalf("Task completion is %d when it should be 3", compl)
 	}
 
 	if task.CurrentStrike() != 3 {
@@ -97,5 +94,9 @@ func TestTaskWithChangingDay(t *testing.T) {
 
 	if task.CurrentMonthCompletion() != 4 {
 		t.Fatalf("Task should be completed 4 times this month while it returned %d", task.CurrentStrike())
+	}
+
+	if strike := task.CurrentMonthBestStrike(); strike != 3 {
+		t.Fatalf("Task best strike should be 3 times while it returned %d", strike)
 	}
 }
