@@ -22,6 +22,7 @@ type Task struct {
 	yearlyBestStrike     YearlyBestStrike
 }
 
+// NewTask creates new task based on name and description with default get time function set to time.Now.
 func NewTask(name, description string) Task {
 	return NewTaskWithCustomTime(name, description, time.Now)
 }
@@ -44,8 +45,9 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 	}
 }
 
-// MakeTaskCompleted adds current time (getTime()) to the completion history if it wasn't completed yet.
-// Each task can be completed once a day.
+// MakeTaskCompleted updates all task tracking states with information about finishing task now.
+// Date is added to completion history if it wasn't completed this day yet.
+// This method also updates statistics information such as day streak number.
 func (task *Task) MakeTaskCompleted() {
 	now := task.GetTime()
 
@@ -120,6 +122,7 @@ func (task Task) WasCompletedToday() bool {
 	return task.WasCompletedAt(y, m, d)
 }
 
+// CurrentStrike returns how many days in a row were task finished.
 func (task Task) CurrentStrike() uint {
 	if task.IsStrikeContinued() {
 		return task.currentStrike

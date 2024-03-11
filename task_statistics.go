@@ -65,6 +65,7 @@ func (task Task) WeekCompletion(year int, month time.Month, day int) int {
 		return 0
 	}
 	// we count all completions that are less than end
+	// a TODO: To be checked if time here and in weekBegin is proper with edge cases.
 	end := time.Date(year, month, day, 23, 59, 59, 59, task.GetTime().Location())
 
 	weekDay := int(end.Weekday())
