@@ -7,9 +7,9 @@ The terminal will be split in at least 3 separate windows. Name window is used i
 ----------------------------------------------------------|
 | Tasks (today):             | Description:               |
 |  (short name)              |                            |
-|  Work on habitui   [x]     |  Extended description of   |
-|  Go for a walk     [x]     |  task that can be edited   |
-|  Do english lesson [ ]     |                            |
+| [x] Work on habitui        |  Extended description of   |
+| [x] Go for a walk          |  task that can be edited   |
+| [ ] Do english lesson      |                            |
 |                            |                            |
 | Shows tasks for today.     |                            |
 |----------------------------|-----------------------------
