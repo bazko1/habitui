@@ -138,24 +138,24 @@ func (task Task) CurrentYearBestStrike() uint {
 }
 
 // initializeDateMaps checks if YearlyBestStrike or YearlyTaskHistory
-// are properly initialized and if not does that with given value.
+// are properly initialized and if not does that with given value init function.
 func initializeDateMaps[Y ~map[int]M, M ~map[time.Month]V,
 	V uint | []time.Time](
 	yearlyHistory Y, year int,
-	month time.Month, initValue V,
+	month time.Month, initFunction func() V,
 ) bool {
 	completionsThisYear, exists := yearlyHistory[year]
 	if !exists {
 		completionsThisYear = make(M, numberOfMonths)
 		yearlyHistory[year] = completionsThisYear
-		completionsThisYear[month] = initValue
+		completionsThisYear[month] = initFunction()
 
 		return true
 	}
 
 	_, exists = completionsThisYear[month]
 	if !exists {
-		completionsThisYear[month] = initValue
+		completionsThisYear[month] = initFunction()
 
 		return true
 	}

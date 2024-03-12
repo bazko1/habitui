@@ -21,6 +21,7 @@ func TuiModel() ListModel {
 		// the map like a mathematical set. The keys refer to the indexes
 		// of the `choices` slice, above.
 		selected: make(map[int]struct{}),
+		cursor:   0,
 	}
 }
 
@@ -29,8 +30,8 @@ func (m ListModel) Init() tea.Cmd {
 	return nil
 }
 
-func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
+func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn
+	switch msg := msg.(type) { //nolint: gocritic
 	// Is it a key press?
 	case tea.KeyMsg:
 		// Cool, what was the actual key pressed?
@@ -70,29 +71,29 @@ func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m ListModel) View() string {
 	// The header
-	s := "Complete habit:\n\n"
+	view := "Complete habit:\n\n"
 
 	// Iterate over our choices
-	for i, choice := range m.choices {
+	for chID, choice := range m.choices {
 		// Is the cursor pointing at this choice?
 		cursor := " " // no cursor
-		if m.cursor == i {
+		if m.cursor == chID {
 			cursor = ">" // cursor!
 		}
 
 		// Is this choice selected?
 		checked := " " // not selected
-		if _, ok := m.selected[i]; ok {
+		if _, ok := m.selected[chID]; ok {
 			checked = "x" // selected!
 		}
 
 		// Render the row
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+		view += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 	}
 
 	// The footer
-	s += "\nPress q to quit.\n"
+	view += "\nPress q to quit.\n"
 
 	// Send the UI for rendering
-	return s
+	return view
 }

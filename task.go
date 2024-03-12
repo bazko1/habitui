@@ -51,13 +51,13 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 func (task *Task) MakeTaskCompleted() {
 	now := task.GetTime()
 
-	if AreSameDates(now, task.lastTimeCompleted) {
+	if task.WasCompletedToday() {
 		return
 	}
 
 	if task.lastTimeCompleted.IsZero() {
 		initializeDateMaps(task.yearlyBestStrike, now.Year(),
-			now.Month(), 1)
+			now.Month(), func() uint { return 1 })
 
 		task.currentStrike = 1
 	}
@@ -81,7 +81,13 @@ func (task *Task) MakeTaskCompleted() {
 	if initializeDateMaps(
 		task.yearlyTaskCompletion,
 		now.Year(),
-		now.Month(), []time.Time{now}) {
+		now.Month(), func() []time.Time {
+			longestHalfMonthUpper := 16
+			init := make([]time.Time, 0, longestHalfMonthUpper)
+			init = append(init, now)
+
+			return init
+		}) {
 		return
 	}
 
@@ -91,6 +97,16 @@ func (task *Task) MakeTaskCompleted() {
 	if lastComplete := completionsThisMonth[len(completionsThisMonth)-1]; !AreSameDates(now, lastComplete) {
 		completionsThisYear[now.Month()] = append(completionsThisMonth, now)
 	}
+}
+
+// MakeTaskUnCompleted makes reverts task completion for current day.
+func (task *Task) MakeTaskUnCompleted() {
+	// / TODO: Implement MakeTaskUnCompleted
+	if !task.WasCompletedToday() {
+		return
+	}
+
+	panic("Unimplemented")
 }
 
 // MonthCompletionTime returns task completion at given year and month.
@@ -115,11 +131,9 @@ func (task Task) WasCompletedAt(year int, month time.Month, day int) bool {
 	return slices.ContainsFunc(mcmpl, func(t time.Time) bool { return AreSameDates(t, atDate) })
 }
 
-// WasCompletedToday returns whether the Task was completed.
+// WasCompletedToday returns whether the Task was completed at current GetTime day.
 func (task Task) WasCompletedToday() bool {
-	y, m, d := task.GetTime().Date()
-
-	return task.WasCompletedAt(y, m, d)
+	return AreSameDates(task.GetTime(), task.lastTimeCompleted)
 }
 
 // CurrentStrike returns how many days in a row were task finished.
