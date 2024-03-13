@@ -1,6 +1,7 @@
 # habittui
 This is my terminal application for managing habits and maybe other recurring tasks.
-
+Rationale for this app is that I spend most of the day in terminal as my setup is neo-vim + tmux. 
+Having habit tracking app inside of terminal is more convenient for me than mobile or web app. 
 ## Initial project:
 The terminal will be split in at least 3 separate windows. Name window is used interchangeably as section.
 ```
