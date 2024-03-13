@@ -4,18 +4,25 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type ListModel struct {
-	choices  []string         // items on the to-do list
-	cursor   int              // which to-do list item our cursor is pointing at
-	selected map[int]struct{} // which to-do items are selected
+	choices      []string // items on the to-do list
+	descriptions []string
+	cursor       int              // which to-do list item our cursor is pointing at
+	selected     map[int]struct{} // which to-do items are selected
 }
 
 func TuiModel() ListModel {
 	return ListModel{
 		// Our to-do list is a grocery list
 		choices: []string{"work on habitui", "go for a walk", "app english lesson"},
+		descriptions: []string{
+			"Longer description for\nthe task 1",
+			"Longer description for\nthe task 2",
+			"Longer description for\nthe task 3",
+		},
 
 		// A map which indicates which choices are selected. We're using
 		// the map like a mathematical set. The keys refer to the indexes
@@ -73,12 +80,16 @@ func (m ListModel) View() string {
 	// The header
 	view := "Complete habit:\n\n"
 
+	description := ""
+	selectedID := 0
 	// Iterate over our choices
 	for chID, choice := range m.choices {
 		// Is the cursor pointing at this choice?
 		cursor := " " // no cursor
 		if m.cursor == chID {
 			cursor = ">" // cursor!
+			selectedID = chID
+			description = fmt.Sprintf("%s", m.descriptions[chID])
 		}
 
 		// Is this choice selected?
@@ -91,8 +102,13 @@ func (m ListModel) View() string {
 		view += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 	}
 
+	view = lipgloss.JoinHorizontal(0.5, view, description)
+
+	view = lipgloss.JoinVertical(0, view, fmt.Sprintf("Strike\ninfo etc...\nFor task: %d", selectedID))
+	view = lipgloss.JoinHorizontal(1, view, fmt.Sprintf("Statistics\ninfo etc...\nFor task: %d", selectedID))
+
 	// The footer
-	view += "\nPress q to quit.\n"
+	view += "\n\nPress q to quit.\n"
 
 	// Send the UI for rendering
 	return view
