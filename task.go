@@ -14,7 +14,7 @@ type Task struct {
 	Name         string
 	Description  string
 	CreationDate time.Time
-	GetTime      func() time.Time
+	GetTime      func() time.Time `json:"-"`
 
 	yearlyTaskCompletion YearlyTaskCompletion
 	lastTimeCompleted    time.Time

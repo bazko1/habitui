@@ -102,10 +102,11 @@ func (m ListModel) View() string {
 		view += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
 	}
 
-	view = lipgloss.JoinHorizontal(0.5, view, description)
+	// view = lipgloss.JoinHorizontal(0, view, lipgloss.Place(10, 10, 0, 0, description, lipgloss.WithWhitespaceForeground(lipgloss.Color("0xffff"))))
+	view = lipgloss.JoinHorizontal(0, view, description)
 
 	view = lipgloss.JoinVertical(0, view, fmt.Sprintf("Strike\ninfo etc...\nFor task: %d", selectedID))
-	view = lipgloss.JoinHorizontal(1, view, fmt.Sprintf("Statistics\ninfo etc...\nFor task: %d", selectedID))
+	// view = lipgloss.JoinHorizontal(1, view, fmt.Sprintf("Statistics\ninfo etc...\nFor task: %d", selectedID))
 
 	// The footer
 	view += "\n\nPress q to quit.\n"
