@@ -8,6 +8,8 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+const sectionBoxWidth = 40
+
 type ListModel struct {
 	choices      []string // items on the to-do list
 	descriptions []string
@@ -95,10 +97,11 @@ func createUpperTextPanelBox(text string, height int) string {
 		PaddingLeft(0).
 		Border(lipgloss.NormalBorder()).
 		Height(height).
-		Width(40)
+		Width(sectionBoxWidth)
 
 	return style.Render(text)
 }
+
 func createLowerPanelTextBox(text string, height int) string {
 	style := lipgloss.NewStyle().
 		// Foreground(lipgloss.Color("#FAFAFA")).
@@ -107,7 +110,7 @@ func createLowerPanelTextBox(text string, height int) string {
 		PaddingLeft(0).
 		Border(lipgloss.NormalBorder()).
 		Height(height).
-		Width(40)
+		Width(sectionBoxWidth)
 
 	return style.Render(text)
 }
@@ -123,7 +126,7 @@ func (m ListModel) View() string {
 		// Is the cursor pointing at this choice?
 		if m.cursor == chID {
 			selectedID = chID
-			description = fmt.Sprintf("%s", m.descriptions[chID])
+			description = m.descriptions[chID]
 			choice = formatSelectedText(choice)
 		}
 
@@ -136,15 +139,23 @@ func (m ListModel) View() string {
 		// Render the row
 		habits += fmt.Sprintf("[%s] %s\n", checked, choice)
 	}
+
 	view := ""
 	habits = "Habits:\n" + habits[:len(habits)-1]
 	height := strings.Count(habits, "\n")
-	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height), createUpperTextPanelBox(description, height+1))
-	// view = lipgloss.JoinHorizontal(0, view, lipgloss.Place(10, 10, 0, 0, description, lipgloss.WithWhitespaceForeground(lipgloss.Color("0xffff"))))
+	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height),
+		createUpperTextPanelBox(description, height+1))
 
-	lowerPanel := lipgloss.JoinHorizontal(1,
-		createLowerPanelTextBox(fmt.Sprintf("Strike (task %d):\n\tCurrent: 0\n\tBest monthly: 0\n\tLongest: 0", selectedID), 4),
-		createLowerPanelTextBox(fmt.Sprintf("Completion (task %d):\n\tThis week: 0\n\tThis month: 0\n\tThis year: 0", selectedID), 4))
+	numOfStats := 4
+	lowerPanel := lipgloss.JoinHorizontal(
+		1,
+		createLowerPanelTextBox(fmt.Sprintf("Strike (task %d):\n\tCurrent: 0\n\tBest monthly: 0\n\tLongest: 0",
+			selectedID), numOfStats),
+		createLowerPanelTextBox(
+			fmt.Sprintf("Completion (task %d):\n\tThis week: 0\n\tThis month: 0\n\tThis year: 0", selectedID),
+			numOfStats,
+		),
+	)
 
 	view = lipgloss.JoinVertical(1, view, lowerPanel)
 
