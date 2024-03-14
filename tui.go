@@ -137,14 +137,14 @@ func (m ListModel) View() string {
 		habits += fmt.Sprintf("[%s] %s\n", checked, choice)
 	}
 	view := ""
-	habits = habits[:len(habits)-1]
+	habits = "Habits:\n" + habits[:len(habits)-1]
 	height := strings.Count(habits, "\n")
 	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height), createUpperTextPanelBox(description, height+1))
 	// view = lipgloss.JoinHorizontal(0, view, lipgloss.Place(10, 10, 0, 0, description, lipgloss.WithWhitespaceForeground(lipgloss.Color("0xffff"))))
 
 	lowerPanel := lipgloss.JoinHorizontal(1,
-		createLowerPanelTextBox(fmt.Sprintf("Strike (task %d):\nCurrent: 0\nBest monthly: 0\nLongest: 0", selectedID), 4),
-		createLowerPanelTextBox(fmt.Sprintf("Completion (task %d):\nThis week: 0\nThis month: 0\nThis year: 0", selectedID), 4))
+		createLowerPanelTextBox(fmt.Sprintf("Strike (task %d):\n\tCurrent: 0\n\tBest monthly: 0\n\tLongest: 0", selectedID), 4),
+		createLowerPanelTextBox(fmt.Sprintf("Completion (task %d):\n\tThis week: 0\n\tThis month: 0\n\tThis year: 0", selectedID), 4))
 
 	view = lipgloss.JoinVertical(1, view, lowerPanel)
 
