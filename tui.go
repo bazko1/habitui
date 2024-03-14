@@ -2,6 +2,7 @@ package habitui
 
 import (
 	"fmt"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -76,20 +77,54 @@ func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn
 	return m, nil
 }
 
+func formatSelectedText(text string) string {
+	style := lipgloss.NewStyle().
+		Bold(true).
+		Italic(true).
+		Faint(true).
+		Reverse(true)
+
+	return style.Render(text)
+}
+
+func createUpperTextPanelBox(text string, height int) string {
+	style := lipgloss.NewStyle().
+		// Foreground(lipgloss.Color("#FAFAFA")).
+		// Background(lipgloss.Color("#7D56F4")).
+		PaddingTop(0).
+		PaddingLeft(0).
+		Border(lipgloss.NormalBorder()).
+		Height(height).
+		Width(40)
+
+	return style.Render(text)
+}
+func createLowerPanelTextBox(text string, height int) string {
+	style := lipgloss.NewStyle().
+		// Foreground(lipgloss.Color("#FAFAFA")).
+		// Background(lipgloss.Color("#7D56F4")).
+		PaddingTop(0).
+		PaddingLeft(0).
+		Border(lipgloss.NormalBorder()).
+		Height(height).
+		Width(40)
+
+	return style.Render(text)
+}
+
 func (m ListModel) View() string {
 	// The header
-	view := "Complete habit:\n\n"
+	habits := ""
 
 	description := ""
 	selectedID := 0
 	// Iterate over our choices
 	for chID, choice := range m.choices {
 		// Is the cursor pointing at this choice?
-		cursor := " " // no cursor
 		if m.cursor == chID {
-			cursor = ">" // cursor!
 			selectedID = chID
 			description = fmt.Sprintf("%s", m.descriptions[chID])
+			choice = formatSelectedText(choice)
 		}
 
 		// Is this choice selected?
@@ -99,14 +134,19 @@ func (m ListModel) View() string {
 		}
 
 		// Render the row
-		view += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+		habits += fmt.Sprintf("[%s] %s\n", checked, choice)
 	}
-
+	view := ""
+	habits = habits[:len(habits)-1]
+	height := strings.Count(habits, "\n")
+	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height), createUpperTextPanelBox(description, height+1))
 	// view = lipgloss.JoinHorizontal(0, view, lipgloss.Place(10, 10, 0, 0, description, lipgloss.WithWhitespaceForeground(lipgloss.Color("0xffff"))))
-	view = lipgloss.JoinHorizontal(0, view, description)
 
-	view = lipgloss.JoinVertical(0, view, fmt.Sprintf("Strike\ninfo etc...\nFor task: %d", selectedID))
-	// view = lipgloss.JoinHorizontal(1, view, fmt.Sprintf("Statistics\ninfo etc...\nFor task: %d", selectedID))
+	lowerPanel := lipgloss.JoinHorizontal(1,
+		createLowerPanelTextBox(fmt.Sprintf("Strike (task %d):\nCurrent: 0\nBest monthly: 0\nLongest: 0", selectedID), 4),
+		createLowerPanelTextBox(fmt.Sprintf("Completion (task %d):\nThis week: 0\nThis month: 0\nThis year: 0", selectedID), 4))
+
+	view = lipgloss.JoinVertical(1, view, lowerPanel)
 
 	// The footer
 	view += "\n\nPress q to quit.\n"
