@@ -97,6 +97,38 @@ func TestTaskWithChangingDay(t *testing.T) {
 	}
 
 	if strike := task.CurrentMonthBestStrike(); strike != 3 {
-		t.Fatalf("Task best strike should be 3 times while it returned %d", strike)
+		t.Fatalf("Task CurrentMonthBestStrike should be 3 times while it returned %d", strike)
+	}
+}
+
+func TestTaskUnCompletion(t *testing.T) {
+	t.Parallel()
+
+	dit := dayIncreasingTime{time.Date(2023, time.October, 3, 15, 33, 0, 0, time.UTC)}
+	task := habitui.NewTaskWithCustomTime("hit the gym", "test description", dit.Now)
+	numCompletions := 6
+
+	for range numCompletions {
+		dit.AddDay()
+		task.MakeTaskCompleted()
+	}
+
+	if task.CurrentMonthCompletion() != numCompletions {
+		t.Fatalf("Task should be completed %d times this month while it returned %d", numCompletions, task.CurrentStrike())
+	}
+
+	if strike := task.CurrentMonthBestStrike(); strike != numCompletions {
+		t.Fatalf("Task CurrentMonthBestStrike should be %d times while it returned %d", numCompletions, strike)
+	}
+
+	task.MakeTaskUnCompleted()
+
+	numCompletions--
+	if task.CurrentMonthCompletion() != numCompletions {
+		t.Fatalf("Task should be completed %d times this month while it returned %d", numCompletions, task.CurrentStrike())
+	}
+
+	if strike := task.CurrentMonthBestStrike(); strike != numCompletions {
+		t.Fatalf("Task CurrentMonthBestStrike should be %d times while it returned %d", numCompletions, strike)
 	}
 }

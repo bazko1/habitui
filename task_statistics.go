@@ -16,7 +16,7 @@ type YearlyTaskCompletion map[int]MonthlyTaskCompletion
 
 // MonthlyBestStrike is type for storing task best longest strike
 // that happened over a month.
-type MonthlyBestStrike map[time.Month]uint
+type MonthlyBestStrike map[time.Month]int
 
 // YearlyBestStrike stores a record of MonthlyBestStrike
 // for each year.
@@ -101,13 +101,13 @@ func (task Task) CurrentWeekCompletion() int {
 	return task.WeekCompletion(y, m, d)
 }
 
-func (task Task) YearBestStrike(year int) uint {
+func (task Task) YearBestStrike(year int) int {
 	monthlyStrikes, exist := task.yearlyBestStrike[year]
 	if !exist {
 		return 0
 	}
 
-	var max uint
+	var max int
 
 	for _, strike := range monthlyStrikes {
 		if strike > max {
@@ -118,7 +118,7 @@ func (task Task) YearBestStrike(year int) uint {
 	return max
 }
 
-func (task Task) MonthBestStrike(year int, month time.Month) uint {
+func (task Task) MonthBestStrike(year int, month time.Month) int {
 	monthlyStrikes, exist := task.yearlyBestStrike[year]
 	if !exist {
 		return 0
@@ -127,20 +127,20 @@ func (task Task) MonthBestStrike(year int, month time.Month) uint {
 	return monthlyStrikes[month]
 }
 
-func (task Task) CurrentMonthBestStrike() uint {
+func (task Task) CurrentMonthBestStrike() int {
 	y, m, _ := task.GetTime().Date()
 
 	return task.MonthBestStrike(y, m)
 }
 
-func (task Task) CurrentYearBestStrike() uint {
+func (task Task) CurrentYearBestStrike() int {
 	return task.YearBestStrike(task.GetTime().Year())
 }
 
 // initializeDateMaps checks if YearlyBestStrike or YearlyTaskHistory
 // are properly initialized and if not does that with given value init function.
 func initializeDateMaps[Y ~map[int]M, M ~map[time.Month]V,
-	V uint | []time.Time](
+	V int | []time.Time](
 	yearlyHistory Y, year int,
 	month time.Month, initFunction func() V,
 ) bool {

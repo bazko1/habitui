@@ -16,10 +16,11 @@ type Task struct {
 	CreationDate time.Time
 	GetTime      func() time.Time `json:"-"`
 
-	yearlyTaskCompletion YearlyTaskCompletion
-	lastTimeCompleted    time.Time
-	currentStrike        uint
-	yearlyBestStrike     YearlyBestStrike
+	yearlyTaskCompletion   YearlyTaskCompletion
+	lastTimeCompleted      time.Time
+	currentStrike          int
+	yearlyBestStrike       YearlyBestStrike
+	bestStrikeLastFinished time.Time
 }
 
 // NewTask creates new task based on name and description with default get time function set to time.Now.
@@ -42,6 +43,7 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 		time.Time{},
 		0,
 		make(YearlyBestStrike),
+		time.Time{},
 	}
 }
 
@@ -57,7 +59,7 @@ func (task *Task) MakeTaskCompleted() {
 
 	if task.lastTimeCompleted.IsZero() {
 		initializeDateMaps(task.yearlyBestStrike, now.Year(),
-			now.Month(), func() uint { return 1 })
+			now.Month(), func() int { return 1 })
 
 		task.currentStrike = 1
 	}
@@ -74,6 +76,7 @@ func (task *Task) MakeTaskCompleted() {
 
 	if task.currentStrike > monthBestStrike {
 		task.yearlyBestStrike[now.Year()][now.Month()] = task.currentStrike
+		task.bestStrikeLastFinished = now
 	}
 
 	task.lastTimeCompleted = now
@@ -101,12 +104,24 @@ func (task *Task) MakeTaskCompleted() {
 
 // MakeTaskUnCompleted makes reverts task completion for current day.
 func (task *Task) MakeTaskUnCompleted() {
-	// / TODO: Implement MakeTaskUnCompleted
 	if !task.WasCompletedToday() {
 		return
 	}
 
-	panic("Unimplemented")
+	complDate := task.lastTimeCompleted
+
+	if monthlyCompletions, exists := task.yearlyTaskCompletion[complDate.Year()]; exists {
+		monthly := monthlyCompletions[complDate.Month()]
+		if completionNum := len(monthly); len(monthly) > 0 && monthly[completionNum-1] == complDate {
+			monthlyCompletions[complDate.Month()] = monthly[:completionNum-1]
+		}
+	}
+
+	task.currentStrike--
+
+	if task.bestStrikeLastFinished == complDate {
+		task.yearlyBestStrike[complDate.Year()][complDate.Month()] = task.currentStrike
+	}
 }
 
 // MonthCompletionTime returns task completion at given year and month.
@@ -137,7 +152,7 @@ func (task Task) WasCompletedToday() bool {
 }
 
 // CurrentStrike returns how many days in a row were task finished.
-func (task Task) CurrentStrike() uint {
+func (task Task) CurrentStrike() int {
 	if task.IsStrikeContinued() {
 		return task.currentStrike
 	}

@@ -9,10 +9,11 @@ import (
 
 type JSONTask struct {
 	*Task
-	YearlyTaskCompletion YearlyTaskCompletion
-	LastTimeCompleted    time.Time
-	CurrentStrike        uint
-	YearlyBestStrike     YearlyBestStrike
+	YearlyTaskCompletion   YearlyTaskCompletion
+	LastTimeCompleted      time.Time
+	CurrentStrike          int
+	YearlyBestStrike       YearlyBestStrike
+	BestStrikeLastFinished time.Time
 }
 
 func (task Task) ToJSONTask() JSONTask {
@@ -22,6 +23,7 @@ func (task Task) ToJSONTask() JSONTask {
 		task.lastTimeCompleted,
 		task.currentStrike,
 		task.yearlyBestStrike,
+		task.bestStrikeLastFinished,
 	}
 }
 
@@ -48,6 +50,7 @@ func JSONLoadTasks(filename string) (TaskList, error) {
 			jsonTask.LastTimeCompleted,
 			jsonTask.CurrentStrike,
 			jsonTask.YearlyBestStrike,
+			jsonTask.bestStrikeLastFinished,
 		})
 	}
 
