@@ -108,10 +108,14 @@ func TestTaskUnCompletion(t *testing.T) {
 	task := habitui.NewTaskWithCustomTime("hit the gym", "test description", dit.Now)
 	numCompletions := 6
 
-	for range numCompletions {
+	for range numCompletions - 1 {
 		dit.AddDay()
 		task.MakeTaskCompleted()
 	}
+
+	notUnCompleted := dit.CurrentTime
+	dit.AddDay()
+	task.MakeTaskCompleted()
 
 	if task.CurrentMonthCompletion() != numCompletions {
 		t.Fatalf("Task should be completed %d times this month while it returned %d", numCompletions, task.CurrentStrike())
@@ -130,5 +134,9 @@ func TestTaskUnCompletion(t *testing.T) {
 
 	if strike := task.CurrentMonthBestStrike(); strike != numCompletions {
 		t.Fatalf("Task CurrentMonthBestStrike should be %d times while it returned %d", numCompletions, strike)
+	}
+
+	if last := task.LastTimeCompleted(); last != notUnCompleted {
+		t.Fatalf("Uncompleting did not update last completion properly it is %v while should be %v", last, notUnCompleted)
 	}
 }

@@ -47,6 +47,11 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 	}
 }
 
+// LastTimeCompleted returns last date when task completion was done.
+func (task Task) LastTimeCompleted() time.Time {
+	return task.lastTimeCompleted
+}
+
 // MakeTaskCompleted updates all task tracking states with information about finishing task now.
 // Date is added to completion history if it wasn't completed this day yet.
 // This method also updates statistics information such as day streak number.
@@ -112,8 +117,13 @@ func (task *Task) MakeTaskUnCompleted() {
 
 	if monthlyCompletions, exists := task.yearlyTaskCompletion[complDate.Year()]; exists {
 		monthly := monthlyCompletions[complDate.Month()]
-		if completionNum := len(monthly); len(monthly) > 0 && monthly[completionNum-1] == complDate {
+		if completionNum := len(monthly); completionNum > 0 && monthly[completionNum-1] == complDate {
 			monthlyCompletions[complDate.Month()] = monthly[:completionNum-1]
+
+			task.lastTimeCompleted = time.Time{}
+			if completionNum > 1 {
+				task.lastTimeCompleted = monthly[len(monthly)-2]
+			}
 		}
 	}
 
