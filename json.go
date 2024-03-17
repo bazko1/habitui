@@ -42,15 +42,15 @@ func JSONLoadTasks(filename string) (TaskList, error) {
 	taskList := make(TaskList, 0, len(jsonTasks))
 	for _, jsonTask := range jsonTasks {
 		taskList = append(taskList, Task{
-			jsonTask.Name,
-			jsonTask.Description,
-			jsonTask.CreationDate,
-			time.Now,
-			jsonTask.YearlyTaskCompletion,
-			jsonTask.LastTimeCompleted,
-			jsonTask.CurrentStrike,
-			jsonTask.YearlyBestStrike,
-			jsonTask.bestStrikeLastFinished,
+			Name:                   jsonTask.Name,
+			Description:            jsonTask.Description,
+			CreationDate:           jsonTask.CreationDate,
+			GetTime:                time.Now,
+			yearlyTaskCompletion:   jsonTask.YearlyTaskCompletion,
+			lastTimeCompleted:      jsonTask.LastTimeCompleted,
+			currentStrike:          jsonTask.CurrentStrike,
+			yearlyBestStrike:       jsonTask.YearlyBestStrike,
+			bestStrikeLastFinished: jsonTask.BestStrikeLastFinished,
 		})
 	}
 
@@ -74,9 +74,7 @@ func JSONSaveTasks(filename string, tasks TaskList) error {
 	}
 
 	defer func() {
-		if err := file.Close(); err != nil {
-			panic(err)
-		}
+		file.Close()
 	}()
 
 	_, err = file.Write(bytes)

@@ -1,6 +1,7 @@
 package habitui_test
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -138,5 +139,67 @@ func TestTaskUnCompletion(t *testing.T) {
 
 	if last := task.LastTimeCompleted(); last != notUnCompleted {
 		t.Fatalf("Uncompleting did not update last completion properly it is %v while should be %v", last, notUnCompleted)
+	}
+}
+
+func TestTaskJSONState(t *testing.T) {
+	t.Parallel()
+
+	dit := dayIncreasingTime{time.Date(2023, time.October, 3, 15, 33, 0, 0, time.UTC)}
+	tasks := habitui.TaskList{
+		habitui.NewTaskWithCustomTime("go for a walk", "walkin and dreamin...", dit.Now),
+		habitui.NewTaskWithCustomTime("strength training", "gym or home calistenics training", dit.Now),
+		habitui.NewTaskWithCustomTime("english lesson", "mobile app lesson", dit.Now),
+	}
+	inARowCompl := 4
+
+	for range inARowCompl {
+		dit.AddDay()
+
+		for i := range len(tasks) {
+			tasks[i].MakeTaskCompleted()
+		}
+	}
+
+	for _, task := range tasks {
+		if compl := task.CurrentMonthCompletion(); compl != inARowCompl {
+			t.Fatalf("Task '%s' should be completed %d times this month while it returned %d",
+				task.Name,
+				inARowCompl,
+				compl)
+		}
+
+		if strike := task.CurrentMonthBestStrike(); strike != inARowCompl {
+			t.Fatalf("Task '%s' CurrentMonthBestStrike should be %d times while it returned %d", task.Name, inARowCompl, strike)
+		}
+	}
+
+	file, err := os.CreateTemp("", "tmpfile-json-test")
+	if err != nil {
+		t.Fatalf("Failed to create tempfile: %v", err)
+	}
+
+	defer func() {
+		os.Remove(file.Name())
+	}()
+
+	err = habitui.JSONSaveTasks(file.Name(), tasks)
+	if err != nil {
+		t.Fatalf("Failed to json save: %v", err)
+	}
+
+	loadedTasks, err := habitui.JSONLoadTasks(file.Name())
+	if err != nil {
+		t.Fatalf("Failed to load tasks from json: %v", err)
+	}
+
+	for _, task := range loadedTasks {
+		task.GetTime = dit.Now
+		if compl := task.CurrentMonthCompletion(); compl != inARowCompl {
+			t.Fatalf("Task '%s' should be completed %d times this month while it returned %d",
+				task.Name,
+				inARowCompl,
+				compl)
+		}
 	}
 }
