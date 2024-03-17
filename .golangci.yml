@@ -12,3 +12,7 @@ linters:
     - golint
     - exhaustivestruct
     - structcheck
+
+linters-settings:
+  cyclop:
+    max-complexity: 12
