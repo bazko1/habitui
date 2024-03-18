@@ -8,75 +8,69 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-const sectionBoxWidth = 40
+const (
+	sectionBoxWidth = 40
+	numWinCols      = 2
+)
 
-type ListModel struct {
-	choices      []string // items on the to-do list
-	descriptions []string
-	cursor       int              // which to-do list item our cursor is pointing at
-	selected     map[int]struct{} // which to-do items are selected
+type TuiAgent struct {
+	tasks       TaskList
+	cursorRow   int
+	cursorCol   int
+	selectedRow map[int]struct{}
 }
 
-func TuiModel() ListModel {
-	return ListModel{
-		// Our to-do list is a grocery list
-		choices: []string{"work on habitui", "go for a walk", "app english lesson"},
-		descriptions: []string{
-			"Longer description for\nthe task 1",
-			"Longer description for\nthe task 2",
-			"Longer description for\nthe task 3",
-		},
-
-		// A map which indicates which choices are selected. We're using
-		// the map like a mathematical set. The keys refer to the indexes
-		// of the `choices` slice, above.
-		selected: make(map[int]struct{}),
-		cursor:   0,
+func NewTuiAgent(tasks TaskList) TuiAgent {
+	return TuiAgent{
+		tasks:       tasks,
+		cursorRow:   0,
+		cursorCol:   0,
+		selectedRow: make(map[int]struct{}),
 	}
 }
 
-func (m ListModel) Init() tea.Cmd {
-	// Just return `nil`, which means "no I/O right now, please."
+func (agent TuiAgent) Init() tea.Cmd {
 	return nil
 }
 
-func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn
+func (agent TuiAgent) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, cyclop
 	switch msg := msg.(type) { //nolint: gocritic
-	// Is it a key press?
 	case tea.KeyMsg:
-		// Cool, what was the actual key pressed?
 		switch msg.String() {
-		// These keys should exit the program.
 		case "ctrl+c", "q":
-			return m, tea.Quit
+			return agent, tea.Quit
 
-		// The "up" and "k" keys move the cursor up
 		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
+			if agent.cursorRow > 0 && agent.cursorCol == 0 {
+				agent.cursorRow--
 			}
 
-		// The "down" and "j" keys move the cursor down
 		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
-				m.cursor++
+			if agent.cursorRow < len(agent.tasks)-1 && agent.cursorCol == 0 {
+				agent.cursorRow++
 			}
 
-		// The "enter" key and the spacebar (a literal space) toggle
-		// the selected state for the item that the cursor is pointing at.
+		case "right", "l":
+			if agent.cursorCol < numWinCols {
+				agent.cursorCol++
+			}
+
+		case "left", "h":
+			if agent.cursorCol > 0 {
+				agent.cursorCol--
+			}
+
 		case "enter", " ":
-			_, ok := m.selected[m.cursor]
+			_, ok := agent.selectedRow[agent.cursorRow]
 			if ok {
-				delete(m.selected, m.cursor)
+				delete(agent.selectedRow, agent.cursorRow)
 			} else {
-				m.selected[m.cursor] = struct{}{}
+				agent.selectedRow[agent.cursorRow] = struct{}{}
 			}
 		}
 	}
 
-	// Return the updated model to the Bubble Tea runtime for processing.
-	// Note that we're not returning a command.
-	return m, nil
+	return agent, nil
 }
 
 func formatSelectedText(text string) string {
@@ -115,36 +109,42 @@ func createLowerPanelTextBox(text string, height int) string {
 	return style.Render(text)
 }
 
-func (m ListModel) View() string {
-	// The header
-	habits := ""
-
+func (agent TuiAgent) View() string {
 	description := ""
+	habits := ""
 	selectedID := 0
-	// Iterate over our choices
-	for chID, choice := range m.choices {
-		// Is the cursor pointing at this choice?
-		if m.cursor == chID {
-			selectedID = chID
-			description = m.descriptions[chID]
-			choice = formatSelectedText(choice)
+
+	for taskID, task := range agent.tasks {
+		taskName := task.Name
+
+		if agent.cursorRow == taskID {
+			selectedID = taskID
+			description = task.Description
+
+			switch agent.cursorCol {
+			case 0:
+				taskName = formatSelectedText(taskName)
+			case 1:
+				description = formatSelectedText(description)
+			}
 		}
 
-		// Is this choice selected?
-		checked := " " // not selected
-		if _, ok := m.selected[chID]; ok {
-			checked = "x" // selected!
+		completed := " "
+		if _, ok := agent.selectedRow[taskID]; ok {
+			completed = "x"
 		}
 
-		// Render the row
-		habits += fmt.Sprintf("[%s] %s\n", checked, choice)
+		habits += fmt.Sprintf("[%s] %s\n", completed, taskName)
 	}
 
 	view := ""
 	habits = "Habits:\n" + habits[:len(habits)-1]
 	height := strings.Count(habits, "\n")
+
+	// /TODO: Need to format description so that if its longer than some characers
+	// newlines need to be added
 	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height),
-		createUpperTextPanelBox(description, height+1))
+		createUpperTextPanelBox("Description:\n"+description, height+1))
 
 	numOfStats := 4
 	lowerPanel := lipgloss.JoinHorizontal(
