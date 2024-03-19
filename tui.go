@@ -64,8 +64,10 @@ func (agent TuiAgent) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: iretu
 			_, ok := agent.selectedRow[agent.cursorRow]
 			if ok {
 				delete(agent.selectedRow, agent.cursorRow)
+				agent.tasks[agent.cursorRow].MakeTaskUnCompleted()
 			} else {
 				agent.selectedRow[agent.cursorRow] = struct{}{}
+				agent.tasks[agent.cursorRow].MakeTaskCompleted()
 			}
 		}
 	}
@@ -76,7 +78,6 @@ func (agent TuiAgent) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: iretu
 func formatSelectedText(text string) string {
 	style := lipgloss.NewStyle().
 		Bold(true).
-		Italic(true).
 		Faint(true).
 		Reverse(true)
 
@@ -85,8 +86,6 @@ func formatSelectedText(text string) string {
 
 func createUpperTextPanelBox(text string, height int) string {
 	style := lipgloss.NewStyle().
-		// Foreground(lipgloss.Color("#FAFAFA")).
-		// Background(lipgloss.Color("#7D56F4")).
 		PaddingTop(0).
 		PaddingLeft(0).
 		Border(lipgloss.NormalBorder()).
@@ -98,8 +97,6 @@ func createUpperTextPanelBox(text string, height int) string {
 
 func createLowerPanelTextBox(text string, height int) string {
 	style := lipgloss.NewStyle().
-		// Foreground(lipgloss.Color("#FAFAFA")).
-		// Background(lipgloss.Color("#7D56F4")).
 		PaddingTop(0).
 		PaddingLeft(0).
 		Border(lipgloss.NormalBorder()).
@@ -125,6 +122,8 @@ func (agent TuiAgent) View() string {
 			case 0:
 				taskName = formatSelectedText(taskName)
 			case 1:
+				// FIXME: Description can be longer than row width and it breaks
+				// selection formating.  TODO: Need to add newlines to long descriptions.
 				description = formatSelectedText(description)
 			}
 		}
@@ -146,15 +145,20 @@ func (agent TuiAgent) View() string {
 	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height),
 		createUpperTextPanelBox("Description:\n"+description, height+1))
 
+	selectedTask := agent.tasks[selectedID]
 	numOfStats := 4
 	lowerPanel := lipgloss.JoinHorizontal(
 		1,
-		createLowerPanelTextBox(fmt.Sprintf("Strike (task %d):\n\tCurrent: 0\n\tBest monthly: 0\n\tLongest: 0",
-			selectedID), numOfStats),
+		createLowerPanelTextBox(fmt.Sprintf("Strike:\n\tCurrent: %d\n\tBest monthly: %d\n\tBest yearly: %d",
+			selectedTask.CurrentStrike(),
+			selectedTask.CurrentMonthBestStrike(),
+			selectedTask.CurrentYearBestStrike()), numOfStats),
+
 		createLowerPanelTextBox(
-			fmt.Sprintf("Completion (task %d):\n\tThis week: 0\n\tThis month: 0\n\tThis year: 0", selectedID),
-			numOfStats,
-		),
+			fmt.Sprintf("Completion:\n\tThis week: %d\n\tThis month: %d\n\tThis year: %d",
+				selectedTask.CurrentWeekCompletion(),
+				selectedTask.CurrentMonthCompletion(),
+				selectedTask.CurrentYearCompletion()), numOfStats),
 	)
 
 	view = lipgloss.JoinVertical(1, view, lowerPanel)
