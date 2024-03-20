@@ -7,6 +7,8 @@ import (
 	"github.com/bazko1/habitui/habit"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/muesli/reflow/wordwrap"
+	"github.com/muesli/reflow/wrap"
 )
 
 const (
@@ -96,6 +98,28 @@ func createUpperTextPanelBox(text string, height int) string {
 	return style.Render(text)
 }
 
+func createDescriptionBox(desc string, height int, selected bool) string {
+	height++
+	style := lipgloss.NewStyle().
+		PaddingTop(0).
+		PaddingLeft(0).
+		Border(lipgloss.NormalBorder()).
+		Height(height).
+		Width(sectionBoxWidth).Bold(true)
+
+	// width based wrapping seems to
+	// work incorrect if we want to
+	// format text previously
+	desc = wordwrap.String(desc, sectionBoxWidth)
+	desc = wrap.String(desc, sectionBoxWidth) // force-wrap long strings
+
+	if selected {
+		desc = formatSelectedText(desc)
+	}
+
+	return style.Render("Description:\n" + desc)
+}
+
 func createLowerPanelTextBox(text string, height int) string {
 	style := lipgloss.NewStyle().
 		PaddingTop(0).
@@ -111,6 +135,11 @@ func (agent Agent) View() string {
 	description := ""
 	habits := ""
 	selectedID := 0
+	descriptionSelected := false
+
+	if agent.cursorCol == 1 {
+		descriptionSelected = true
+	}
 
 	for taskID, task := range agent.tasks {
 		taskName := task.Name
@@ -119,13 +148,8 @@ func (agent Agent) View() string {
 			selectedID = taskID
 			description = task.Description
 
-			switch agent.cursorCol {
-			case 0:
+			if agent.cursorCol == 0 {
 				taskName = formatSelectedText(taskName)
-			case 1:
-				// FIXME: Description can be longer than row width and it breaks
-				// selection formating.  TODO: Need to add newlines to long descriptions.
-				description = formatSelectedText(description)
 			}
 		}
 
@@ -141,10 +165,8 @@ func (agent Agent) View() string {
 	habits = "Habits:\n" + habits[:len(habits)-1]
 	height := strings.Count(habits, "\n")
 
-	// /TODO: Need to format description so that if its longer than some characers
-	// newlines need to be added
 	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height),
-		createUpperTextPanelBox("Description:\n"+description, height+1))
+		createDescriptionBox(description, height, descriptionSelected))
 
 	selectedTask := agent.tasks[selectedID]
 	numOfStats := 4
