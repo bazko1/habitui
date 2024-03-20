@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bazko1/habitui"
+	habitui "github.com/bazko1/habitui/habit"
+	"github.com/bazko1/habitui/tui"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -17,7 +18,7 @@ func main() {
 			"also participating in coding challenge."),
 	}
 
-	p := tea.NewProgram(habitui.NewTuiAgent(tasks))
+	p := tea.NewProgram(tui.NewTuiAgent(tasks))
 
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Running tui error: %v", err)

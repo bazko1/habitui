@@ -1,11 +1,11 @@
-package habitui_test
+package habit_test
 
 import (
 	"os"
 	"testing"
 	"time"
 
-	"github.com/bazko1/habitui"
+	habitui "github.com/bazko1/habitui/habit"
 )
 
 type dayIncreasingTime struct {

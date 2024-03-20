@@ -1,9 +1,10 @@
-package habitui
+package tui
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/bazko1/habitui/habit"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -13,15 +14,15 @@ const (
 	numWinCols      = 2
 )
 
-type TuiAgent struct {
-	tasks       TaskList
+type Agent struct {
+	tasks       habit.TaskList
 	cursorRow   int
 	cursorCol   int
 	selectedRow map[int]struct{}
 }
 
-func NewTuiAgent(tasks TaskList) TuiAgent {
-	return TuiAgent{
+func NewTuiAgent(tasks habit.TaskList) Agent {
+	return Agent{
 		tasks:       tasks,
 		cursorRow:   0,
 		cursorCol:   0,
@@ -29,11 +30,11 @@ func NewTuiAgent(tasks TaskList) TuiAgent {
 	}
 }
 
-func (agent TuiAgent) Init() tea.Cmd {
+func (agent Agent) Init() tea.Cmd {
 	return nil
 }
 
-func (agent TuiAgent) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, cyclop
+func (agent Agent) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, cyclop
 	switch msg := msg.(type) { //nolint: gocritic
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -106,7 +107,7 @@ func createLowerPanelTextBox(text string, height int) string {
 	return style.Render(text)
 }
 
-func (agent TuiAgent) View() string {
+func (agent Agent) View() string {
 	description := ""
 	habits := ""
 	selectedID := 0

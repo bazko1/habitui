@@ -1,4 +1,4 @@
-package habitui
+package habit
 
 import (
 	"time"
