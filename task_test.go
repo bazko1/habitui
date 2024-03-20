@@ -156,7 +156,7 @@ func TestTaskJSONState(t *testing.T) {
 	for range inARowCompl {
 		dit.AddDay()
 
-		for i := range len(tasks) {
+		for i := range tasks {
 			tasks[i].MakeTaskCompleted()
 		}
 	}
