@@ -105,7 +105,7 @@ func createDescriptionBox(desc string, height int, selected bool) string {
 		PaddingLeft(0).
 		Border(lipgloss.NormalBorder()).
 		Height(height).
-		Width(sectionBoxWidth).Bold(true)
+		Width(sectionBoxWidth)
 
 	// width based wrapping seems to
 	// work incorrect if we want to
