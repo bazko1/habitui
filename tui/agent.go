@@ -24,12 +24,20 @@ type Agent struct {
 }
 
 func NewTuiAgent(tasks habit.TaskList) Agent {
-	return Agent{
+	agent := Agent{
 		tasks:       tasks,
 		cursorRow:   0,
 		cursorCol:   0,
 		selectedRow: make(map[int]struct{}),
 	}
+
+	for tID, t := range tasks {
+		if t.WasCompletedToday() {
+			agent.selectedRow[tID] = struct{}{}
+		}
+	}
+
+	return agent
 }
 
 func (agent Agent) Init() tea.Cmd {

@@ -10,18 +10,30 @@ import (
 )
 
 func main() {
-	tasks := habitui.TaskList{
-		habitui.NewTask("go for a walk", "walkin and dreamin..."),
-		habitui.NewTask("strength training", "gym or home calistenics training"),
-		habitui.NewTask("english lesson", "mobile app lesson"),
-		habitui.NewTask("Work on habitui", "Daily work on personal project that is "+
-			"also participating in coding challenge."),
+	// \ TODO: this should alaso parsed from command line arguments
+	// and searched in some standard places like $HOME/.config
+	tasksFile := ".habitui.json"
+
+	// TODO: we need to check if file exist first
+	tasks, err := habitui.JSONLoadTasks(tasksFile)
+	if err != nil {
+		fmt.Println("failed to load tasks:", err) //nolint:forbidigo
+		os.Exit(1)
 	}
 
-	p := tea.NewProgram(tui.NewTuiAgent(tasks))
+	prog := tea.NewProgram(tui.NewTuiAgent(tasks))
 
-	if _, err := p.Run(); err != nil {
-		fmt.Printf("Running tui error: %v", err)
-		os.Exit(1)
+	defer func() {
+		err := habitui.JSONSaveTasks(tasksFile, tasks)
+		if err != nil {
+			fmt.Println("failed to save tasks: %w", err) //nolint:forbidigo
+			os.Exit(1)
+		}
+
+		os.Exit(0)
+	}()
+
+	if _, err := prog.Run(); err != nil {
+		fmt.Printf("Running tui error: %v", err) //nolint:forbidigo
 	}
 }
