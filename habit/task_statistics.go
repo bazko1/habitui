@@ -139,26 +139,12 @@ func (task Task) CurrentYearBestStrike() int {
 
 // initializeDateMaps checks if YearlyBestStrike or YearlyTaskHistory
 // are properly initialized and if not does that with given value init function.
+// TODO: make this per type as it is so easy that i do not need generics here
 func initializeDateMaps[Y ~map[int]M, M ~map[time.Month]V,
 	V int | []time.Time](
 	yearlyHistory Y, year int,
 	month time.Month, initFunction func() V,
-) bool {
-	completionsThisYear, exists := yearlyHistory[year]
-	if !exists {
-		completionsThisYear = make(M, numberOfMonths)
-		yearlyHistory[year] = completionsThisYear
-		completionsThisYear[month] = initFunction()
-
-		return true
-	}
-
-	_, exists = completionsThisYear[month]
-	if !exists {
-		completionsThisYear[month] = initFunction()
-
-		return true
-	}
-
-	return false
+) {
+	yearlyHistory[year] = make(M, numberOfMonths)
+	yearlyHistory[year][month] = initFunction()
 }

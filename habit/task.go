@@ -63,10 +63,25 @@ func (task *Task) MakeTaskCompleted() {
 	}
 
 	if task.lastTimeCompleted.IsZero() {
+		initializeDateMaps(
+			task.yearlyTaskCompletion,
+			now.Year(),
+			now.Month(), func() []time.Time {
+				longestHalfMonthUpper := 16
+				init := make([]time.Time, 0, longestHalfMonthUpper)
+				init = append(init, now)
+
+				return init
+			})
+
+		task.lastTimeCompleted = now
 		initializeDateMaps(task.yearlyBestStrike, now.Year(),
 			now.Month(), func() int { return 1 })
 
 		task.currentStrike = 1
+		task.bestStrikeLastFinished = now
+
+		return
 	}
 
 	if !task.IsStrikeContinued() {
@@ -85,19 +100,6 @@ func (task *Task) MakeTaskCompleted() {
 	}
 
 	task.lastTimeCompleted = now
-
-	if initializeDateMaps(
-		task.yearlyTaskCompletion,
-		now.Year(),
-		now.Month(), func() []time.Time {
-			longestHalfMonthUpper := 16
-			init := make([]time.Time, 0, longestHalfMonthUpper)
-			init = append(init, now)
-
-			return init
-		}) {
-		return
-	}
 
 	completionsThisYear := task.yearlyTaskCompletion[now.Year()]
 	completionsThisMonth := completionsThisYear[now.Month()]
@@ -132,6 +134,10 @@ func (task *Task) MakeTaskUnCompleted() {
 	}
 
 	task.currentStrike--
+
+	if task.currentStrike == 0 {
+		delete(task.yearlyBestStrike[complDate.Year()], complDate.Month())
+	}
 
 	if task.bestStrikeLastFinished == complDate {
 		task.yearlyBestStrike[complDate.Year()][complDate.Month()] = task.currentStrike
