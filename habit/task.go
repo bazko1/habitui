@@ -102,6 +102,10 @@ func (task *Task) MakeTaskCompleted() {
 	completionsThisYear := task.yearlyTaskCompletion[now.Year()]
 	completionsThisMonth := completionsThisYear[now.Month()]
 
+	if len(completionsThisMonth) == 0 {
+		return
+	}
+
 	if lastComplete := completionsThisMonth[len(completionsThisMonth)-1]; !AreSameDates(now, lastComplete) {
 		completionsThisYear[now.Month()] = append(completionsThisMonth, now)
 	}
@@ -114,13 +118,13 @@ func (task *Task) MakeTaskUnCompleted() {
 	}
 
 	complDate := task.lastTimeCompleted
+	task.lastTimeCompleted = time.Time{}
 
 	if monthlyCompletions, exists := task.yearlyTaskCompletion[complDate.Year()]; exists {
 		monthly := monthlyCompletions[complDate.Month()]
 		if completionNum := len(monthly); completionNum > 0 && monthly[completionNum-1] == complDate {
 			monthlyCompletions[complDate.Month()] = monthly[:completionNum-1]
 
-			task.lastTimeCompleted = time.Time{}
 			if completionNum > 1 {
 				task.lastTimeCompleted = monthly[len(monthly)-2]
 			}
