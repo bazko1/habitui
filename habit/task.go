@@ -138,6 +138,7 @@ func (task *Task) MakeTaskUnCompleted() {
 	if task.currentStrike == 0 {
 		task.yearlyBestStrike[complDate.Year()] = nil
 		delete(task.yearlyBestStrike[complDate.Year()], complDate.Month())
+
 		return
 	}
 

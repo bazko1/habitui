@@ -1,10 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
-	habitui "github.com/bazko1/habitui/habit"
+	"github.com/bazko1/habitui/habit"
 	"github.com/bazko1/habitui/tui"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -14,17 +15,21 @@ func main() {
 	// and searched in some standard places like $HOME/.config
 	tasksFile := ".habitui.json"
 
-	// TODO: we need to check if file exist first
-	tasks, err := habitui.JSONLoadTasks(tasksFile)
-	if err != nil {
+	tasks, err := habit.JSONLoadTasks(tasksFile)
+
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		fmt.Println("failed to load tasks:", err) //nolint:forbidigo
 		os.Exit(1)
+	}
+
+	if tasks == nil {
+		tasks = habit.TaskList{}
 	}
 
 	prog := tea.NewProgram(tui.NewTuiAgent(tasks))
 
 	defer func() {
-		err := habitui.JSONSaveTasks(tasksFile, tasks)
+		err := habit.JSONSaveTasks(tasksFile, tasks)
 		if err != nil {
 			fmt.Println("failed to save tasks: %w", err) //nolint:forbidigo
 			os.Exit(1)

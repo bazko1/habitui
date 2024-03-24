@@ -170,29 +170,37 @@ func (agent Agent) View() string {
 	}
 
 	view := ""
-	habits = "Habits:\n" + habits[:len(habits)-1]
+
+	if len(agent.tasks) == 0 {
+		habits += "No habits."
+		description = "Add new task and start forming habit."
+	}
+
+	habits = "Habits:\n" + strings.TrimSuffix(habits, "\n")
 	height := strings.Count(habits, "\n")
 
 	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height),
 		createDescriptionBox(description, height, descriptionSelected))
 
-	selectedTask := agent.tasks[selectedID]
-	numOfStats := 4
-	lowerPanel := lipgloss.JoinHorizontal(
-		1,
-		createLowerPanelTextBox(fmt.Sprintf("Strike:\n\tCurrent: %d\n\tBest monthly: %d\n\tBest yearly: %d",
-			selectedTask.CurrentStrike(),
-			selectedTask.CurrentMonthBestStrike(),
-			selectedTask.CurrentYearBestStrike()), numOfStats),
+	if len(agent.tasks) != 0 {
+		selectedTask := agent.tasks[selectedID]
+		numOfStats := 4
+		lowerPanel := lipgloss.JoinHorizontal(
+			1,
+			createLowerPanelTextBox(fmt.Sprintf("Strike:\n\tCurrent: %d\n\tBest monthly: %d\n\tBest yearly: %d",
+				selectedTask.CurrentStrike(),
+				selectedTask.CurrentMonthBestStrike(),
+				selectedTask.CurrentYearBestStrike()), numOfStats),
 
-		createLowerPanelTextBox(
-			fmt.Sprintf("Completion:\n\tThis week: %d\n\tThis month: %d\n\tThis year: %d",
-				selectedTask.CurrentWeekCompletion(),
-				selectedTask.CurrentMonthCompletion(),
-				selectedTask.CurrentYearCompletion()), numOfStats),
-	)
+			createLowerPanelTextBox(
+				fmt.Sprintf("Completion:\n\tThis week: %d\n\tThis month: %d\n\tThis year: %d",
+					selectedTask.CurrentWeekCompletion(),
+					selectedTask.CurrentMonthCompletion(),
+					selectedTask.CurrentYearCompletion()), numOfStats),
+		)
 
-	view = lipgloss.JoinVertical(1, view, lowerPanel)
+		view = lipgloss.JoinVertical(1, view, lowerPanel)
+	}
 
 	// The footer
 	view += "\n\nPress q to quit.\n"
