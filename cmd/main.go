@@ -26,7 +26,7 @@ func main() {
 		tasks = habit.TaskList{}
 	}
 
-	prog := tea.NewProgram(tui.NewTuiAgent(tasks))
+	prog := tea.NewProgram(tui.NewTuiModel(tasks))
 
 	defer func() {
 		err := habit.JSONSaveTasks(tasksFile, tasks)

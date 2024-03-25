@@ -16,15 +16,15 @@ const (
 	numWinCols      = 2
 )
 
-type Agent struct {
+type Model struct {
 	tasks       habit.TaskList
 	cursorRow   int
 	cursorCol   int
 	selectedRow map[int]struct{}
 }
 
-func NewTuiAgent(tasks habit.TaskList) Agent {
-	agent := Agent{
+func NewTuiModel(tasks habit.TaskList) Model {
+	agent := Model{
 		tasks:       tasks,
 		cursorRow:   0,
 		cursorCol:   0,
@@ -40,11 +40,11 @@ func NewTuiAgent(tasks habit.TaskList) Agent {
 	return agent
 }
 
-func (agent Agent) Init() tea.Cmd {
+func (agent Model) Init() tea.Cmd {
 	return nil
 }
 
-func (agent Agent) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, cyclop
+func (agent Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, cyclop
 	switch msg := msg.(type) { //nolint: gocritic
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -139,7 +139,7 @@ func createLowerPanelTextBox(text string, height int) string {
 	return style.Render(text)
 }
 
-func (agent Agent) View() string {
+func (agent Model) View() string {
 	description := ""
 	habits := ""
 	selectedID := 0
