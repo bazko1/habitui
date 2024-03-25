@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/bazko1/habitui/habit"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
@@ -21,69 +23,125 @@ type Model struct {
 	cursorRow   int
 	cursorCol   int
 	selectedRow map[int]struct{}
+	keys        keyMap
+	help        help.Model
 }
 
 func NewTuiModel(tasks habit.TaskList) Model {
-	agent := Model{
+	model := Model{
 		tasks:       tasks,
 		cursorRow:   0,
 		cursorCol:   0,
 		selectedRow: make(map[int]struct{}),
+		keys: keyMap{
+			Up: key.NewBinding(
+				key.WithKeys("up", "k"),
+				key.WithHelp("↑/k", "move up"),
+			),
+			Down: key.NewBinding(
+				key.WithKeys("down", "j"),
+				key.WithHelp("↓/j", "move down"),
+			),
+			Left: key.NewBinding(
+				key.WithKeys("left", "h"),
+				key.WithHelp("←/h", "move left"),
+			),
+			Right: key.NewBinding(
+				key.WithKeys("right", "l"),
+				key.WithHelp("→/l", "move right"),
+			),
+			Help: key.NewBinding(
+				key.WithKeys("?"),
+				key.WithHelp("?", "toggle help"),
+			),
+			Select: key.NewBinding(
+				key.WithKeys("Enter", " "),
+				key.WithHelp("Enter/Space", "change task status"),
+			),
+			Quit: key.NewBinding(
+				key.WithKeys("q", "esc", "ctrl+c"),
+				key.WithHelp("q", "quit"),
+			),
+		},
+		help: help.New(),
 	}
 
 	for tID, t := range tasks {
 		if t.WasCompletedToday() {
-			agent.selectedRow[tID] = struct{}{}
+			model.selectedRow[tID] = struct{}{}
 		}
 	}
 
-	return agent
+	return model
 }
 
-func (agent Model) Init() tea.Cmd {
+func (model Model) Init() tea.Cmd {
 	return nil
 }
 
-func (agent Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, cyclop
+type keyMap struct {
+	Up     key.Binding
+	Down   key.Binding
+	Left   key.Binding
+	Right  key.Binding
+	Select key.Binding
+	Help   key.Binding
+	Quit   key.Binding
+}
+
+func (k keyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Help, k.Quit}
+}
+
+func (k keyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down, k.Left, k.Right}, // first column
+		{k.Help, k.Quit, k.Select},      // second column
+	}
+}
+
+func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, cyclop
 	switch msg := msg.(type) { //nolint: gocritic
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
-			return agent, tea.Quit
+			return model, tea.Quit
 
 		case "up", "k":
-			if agent.cursorRow > 0 && agent.cursorCol == 0 {
-				agent.cursorRow--
+			if model.cursorRow > 0 && model.cursorCol == 0 {
+				model.cursorRow--
 			}
 
 		case "down", "j":
-			if agent.cursorRow < len(agent.tasks)-1 && agent.cursorCol == 0 {
-				agent.cursorRow++
+			if model.cursorRow < len(model.tasks)-1 && model.cursorCol == 0 {
+				model.cursorRow++
 			}
 
 		case "right", "l":
-			if agent.cursorCol < numWinCols {
-				agent.cursorCol++
+			if model.cursorCol < numWinCols {
+				model.cursorCol++
 			}
 
 		case "left", "h":
-			if agent.cursorCol > 0 {
-				agent.cursorCol--
+			if model.cursorCol > 0 {
+				model.cursorCol--
 			}
 
 		case "enter", " ":
-			_, ok := agent.selectedRow[agent.cursorRow]
+			_, ok := model.selectedRow[model.cursorRow]
 			if ok {
-				delete(agent.selectedRow, agent.cursorRow)
-				agent.tasks[agent.cursorRow].MakeTaskUnCompleted()
+				delete(model.selectedRow, model.cursorRow)
+				model.tasks[model.cursorRow].MakeTaskUnCompleted()
 			} else {
-				agent.selectedRow[agent.cursorRow] = struct{}{}
-				agent.tasks[agent.cursorRow].MakeTaskCompleted()
+				model.selectedRow[model.cursorRow] = struct{}{}
+				model.tasks[model.cursorRow].MakeTaskCompleted()
 			}
+		case "?":
+			model.help.ShowAll = !model.help.ShowAll
 		}
 	}
 
-	return agent, nil
+	return model, nil
 }
 
 func formatSelectedText(text string) string {
@@ -139,30 +197,30 @@ func createLowerPanelTextBox(text string, height int) string {
 	return style.Render(text)
 }
 
-func (agent Model) View() string {
+func (model Model) View() string {
 	description := ""
 	habits := ""
 	selectedID := 0
 	descriptionSelected := false
 
-	if agent.cursorCol == 1 {
+	if model.cursorCol == 1 {
 		descriptionSelected = true
 	}
 
-	for taskID, task := range agent.tasks {
+	for taskID, task := range model.tasks {
 		taskName := task.Name
 
-		if agent.cursorRow == taskID {
+		if model.cursorRow == taskID {
 			selectedID = taskID
 			description = task.Description
 
-			if agent.cursorCol == 0 {
+			if model.cursorCol == 0 {
 				taskName = formatSelectedText(taskName)
 			}
 		}
 
 		completed := " "
-		if _, ok := agent.selectedRow[taskID]; ok {
+		if _, ok := model.selectedRow[taskID]; ok {
 			completed = "x"
 		}
 
@@ -171,7 +229,7 @@ func (agent Model) View() string {
 
 	view := ""
 
-	if len(agent.tasks) == 0 {
+	if len(model.tasks) == 0 {
 		habits += "No habits."
 		description = "Add new task and start forming habit."
 	}
@@ -182,8 +240,8 @@ func (agent Model) View() string {
 	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height),
 		createDescriptionBox(description, height, descriptionSelected))
 
-	if len(agent.tasks) != 0 {
-		selectedTask := agent.tasks[selectedID]
+	if len(model.tasks) != 0 {
+		selectedTask := model.tasks[selectedID]
 		numOfStats := 4
 		lowerPanel := lipgloss.JoinHorizontal(
 			1,
@@ -202,9 +260,8 @@ func (agent Model) View() string {
 		view = lipgloss.JoinVertical(1, view, lowerPanel)
 	}
 
-	// The footer
-	view += "\n\nPress q to quit.\n"
+	helpView := model.help.View(model.keys)
+	view += "\n" + helpView
 
-	// Send the UI for rendering
 	return view
 }
