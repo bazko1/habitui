@@ -16,9 +16,9 @@ type JSONTask struct {
 	BestStrikeLastFinished time.Time
 }
 
-func (task Task) ToJSONTask() JSONTask {
+func (task *Task) ToJSONTask() JSONTask {
 	return JSONTask{
-		&task,
+		task,
 		task.yearlyTaskCompletion,
 		task.lastTimeCompleted,
 		task.currentStrike,

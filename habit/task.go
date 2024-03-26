@@ -48,7 +48,7 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 }
 
 // LastTimeCompleted returns last date when task completion was done.
-func (task Task) LastTimeCompleted() time.Time {
+func (task *Task) LastTimeCompleted() time.Time {
 	return task.lastTimeCompleted
 }
 
@@ -148,7 +148,7 @@ func (task *Task) MakeTaskUnCompleted() {
 }
 
 // MonthCompletionTime returns task completion at given year and month.
-func (task Task) MonthCompletionTime(year int, month time.Month) []time.Time {
+func (task *Task) MonthCompletionTime(year int, month time.Month) []time.Time {
 	completionsYear, exists := task.yearlyTaskCompletion[year]
 	if !exists {
 		return nil
@@ -158,7 +158,7 @@ func (task Task) MonthCompletionTime(year int, month time.Month) []time.Time {
 }
 
 // WasCompletedAt returns whether the Task was completed at the given date.
-func (task Task) WasCompletedAt(year int, month time.Month, day int) bool {
+func (task *Task) WasCompletedAt(year int, month time.Month, day int) bool {
 	mcmpl := task.MonthCompletionTime(year, month)
 	if mcmpl == nil {
 		return false
@@ -170,12 +170,12 @@ func (task Task) WasCompletedAt(year int, month time.Month, day int) bool {
 }
 
 // WasCompletedToday returns whether the Task was completed at current GetTime day.
-func (task Task) WasCompletedToday() bool {
+func (task *Task) WasCompletedToday() bool {
 	return AreSameDates(task.GetTime(), task.lastTimeCompleted)
 }
 
 // CurrentStrike returns how many days in a row were task finished.
-func (task Task) CurrentStrike() int {
+func (task *Task) CurrentStrike() int {
 	if task.IsStrikeContinued() {
 		return task.currentStrike
 	}
@@ -185,7 +185,7 @@ func (task Task) CurrentStrike() int {
 
 // IsStrikeContinued returns whether strike was broken
 // meaning there was over 1 day break from finishing it.
-func (task Task) IsStrikeContinued() bool {
+func (task *Task) IsStrikeContinued() bool {
 	return AreSameDates(task.GetTime(), task.lastTimeCompleted) ||
 		AreSameDates(task.GetTime().AddDate(0, 0, -1), task.lastTimeCompleted)
 }

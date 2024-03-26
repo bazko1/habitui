@@ -22,12 +22,12 @@ type MonthlyBestStrike map[time.Month]int
 // for each year.
 type YearlyBestStrike map[int]MonthlyBestStrike
 
-func (task Task) CurrentYearCompletion() int {
+func (task *Task) CurrentYearCompletion() int {
 	return task.YearCompletion(task.GetTime().Year())
 }
 
 // Returns number of completions over the given year.
-func (task Task) YearCompletion(year int) int {
+func (task *Task) YearCompletion(year int) int {
 	completionsYear, exists := task.yearlyTaskCompletion[year]
 	if !exists {
 		return 0
@@ -42,7 +42,7 @@ func (task Task) YearCompletion(year int) int {
 }
 
 // Returns number of completions over the month represented by given year and month.
-func (task Task) MonthCompletion(year int, month time.Month) int {
+func (task *Task) MonthCompletion(year int, month time.Month) int {
 	mcp := task.MonthCompletionTime(year, month)
 	if mcp == nil {
 		return 0
@@ -51,7 +51,7 @@ func (task Task) MonthCompletion(year int, month time.Month) int {
 	return len(mcp)
 }
 
-func (task Task) CurrentMonthCompletion() int {
+func (task *Task) CurrentMonthCompletion() int {
 	y, m, _ := task.GetTime().Date()
 
 	return task.MonthCompletion(y, m)
@@ -59,7 +59,7 @@ func (task Task) CurrentMonthCompletion() int {
 
 // Returns number of completions over the week represented by given date.
 // Week is previous Monday up to given date.
-func (task Task) WeekCompletion(year int, month time.Month, day int) int {
+func (task *Task) WeekCompletion(year int, month time.Month, day int) int {
 	mcp := task.MonthCompletionTime(year, month)
 	if mcp == nil {
 		return 0
@@ -95,13 +95,13 @@ func (task Task) WeekCompletion(year int, month time.Month, day int) int {
 
 // CurrentWeekCompletion returns number of task completions over the whole week up to
 // current day. The week in this sense is treated as last Monday till current day.
-func (task Task) CurrentWeekCompletion() int {
+func (task *Task) CurrentWeekCompletion() int {
 	y, m, d := task.GetTime().Date()
 
 	return task.WeekCompletion(y, m, d)
 }
 
-func (task Task) YearBestStrike(year int) int {
+func (task *Task) YearBestStrike(year int) int {
 	monthlyStrikes, exist := task.yearlyBestStrike[year]
 	if !exist {
 		return 0
@@ -118,7 +118,7 @@ func (task Task) YearBestStrike(year int) int {
 	return max
 }
 
-func (task Task) MonthBestStrike(year int, month time.Month) int {
+func (task *Task) MonthBestStrike(year int, month time.Month) int {
 	monthlyStrikes, exist := task.yearlyBestStrike[year]
 	if !exist {
 		return 0
@@ -127,13 +127,13 @@ func (task Task) MonthBestStrike(year int, month time.Month) int {
 	return monthlyStrikes[month]
 }
 
-func (task Task) CurrentMonthBestStrike() int {
+func (task *Task) CurrentMonthBestStrike() int {
 	y, m, _ := task.GetTime().Date()
 
 	return task.MonthBestStrike(y, m)
 }
 
-func (task Task) CurrentYearBestStrike() int {
+func (task *Task) CurrentYearBestStrike() int {
 	return task.YearBestStrike(task.GetTime().Year())
 }
 
