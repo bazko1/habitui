@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 
@@ -11,11 +12,10 @@ import (
 )
 
 func main() {
-	// \ TODO: this should alaso parsed from command line arguments
-	// and searched in some standard places like $HOME/.config
-	tasksFile := ".habitui.json"
+	tasksFile := flag.String("data", ".habitui.json", "a name of for loading/saving tasks data")
+	flag.Parse()
 
-	tasks, err := habit.JSONLoadTasks(tasksFile)
+	tasks, err := habit.JSONLoadTasks(*tasksFile)
 
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		fmt.Println("failed to load tasks:", err) //nolint:forbidigo
@@ -29,7 +29,7 @@ func main() {
 	prog := tea.NewProgram(tui.NewTuiModel(tasks))
 
 	defer func() {
-		err := habit.JSONSaveTasks(tasksFile, tasks)
+		err := habit.JSONSaveTasks(*tasksFile, tasks)
 		if err != nil {
 			fmt.Println("failed to save tasks: %w", err) //nolint:forbidigo
 			os.Exit(1)

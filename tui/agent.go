@@ -55,7 +55,7 @@ func NewTuiModel(tasks habit.TaskList) Model {
 				key.WithHelp("?", "toggle help"),
 			),
 			Select: key.NewBinding(
-				key.WithKeys("Enter", " "),
+				key.WithKeys("enter", " "),
 				key.WithHelp("Enter/Space", "change task status"),
 			),
 			Quit: key.NewBinding(
@@ -103,31 +103,31 @@ func (k keyMap) FullHelp() [][]key.Binding {
 func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, cyclop
 	switch msg := msg.(type) { //nolint: gocritic
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
+		switch {
+		case key.Matches(msg, model.keys.Quit):
 			return model, tea.Quit
 
-		case "up", "k":
+		case key.Matches(msg, model.keys.Up):
 			if model.cursorRow > 0 && model.cursorCol == 0 {
 				model.cursorRow--
 			}
 
-		case "down", "j":
+		case key.Matches(msg, model.keys.Down):
 			if model.cursorRow < len(model.tasks)-1 && model.cursorCol == 0 {
 				model.cursorRow++
 			}
 
-		case "right", "l":
+		case key.Matches(msg, model.keys.Right):
 			if model.cursorCol < numWinCols {
 				model.cursorCol++
 			}
 
-		case "left", "h":
+		case key.Matches(msg, model.keys.Left):
 			if model.cursorCol > 0 {
 				model.cursorCol--
 			}
 
-		case "enter", " ":
+		case key.Matches(msg, model.keys.Select):
 			_, ok := model.selectedRow[model.cursorRow]
 			if ok {
 				delete(model.selectedRow, model.cursorRow)
@@ -136,7 +136,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 				model.selectedRow[model.cursorRow] = struct{}{}
 				model.tasks[model.cursorRow].MakeTaskCompleted()
 			}
-		case "?":
+		case key.Matches(msg, model.keys.Help):
 			model.help.ShowAll = !model.help.ShowAll
 		}
 	}
