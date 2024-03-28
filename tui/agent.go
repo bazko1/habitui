@@ -25,6 +25,7 @@ type Model struct {
 	selectedRow map[int]struct{}
 	keys        keyMap
 	help        help.Model
+	addSelected bool
 }
 
 func NewTuiModel(tasks habit.TaskList) Model {
@@ -58,12 +59,17 @@ func NewTuiModel(tasks habit.TaskList) Model {
 				key.WithKeys("enter", " "),
 				key.WithHelp("Enter/Space", "change task status"),
 			),
+			Add: key.NewBinding(
+				key.WithKeys("a"),
+				key.WithHelp("a", "add task"),
+			),
 			Quit: key.NewBinding(
 				key.WithKeys("q", "esc", "ctrl+c"),
 				key.WithHelp("q", "quit"),
 			),
 		},
-		help: help.New(),
+		help:        help.New(),
+		addSelected: false,
 	}
 
 	for tID, t := range tasks {
@@ -86,6 +92,7 @@ type keyMap struct {
 	Right  key.Binding
 	Select key.Binding
 	Help   key.Binding
+	Add    key.Binding
 	Quit   key.Binding
 }
 
@@ -95,8 +102,8 @@ func (k keyMap) ShortHelp() []key.Binding {
 
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Left, k.Right}, // first column
-		{k.Help, k.Quit, k.Select},      // second column
+		{k.Up, k.Down, k.Left, k.Right},   // first column
+		{k.Help, k.Quit, k.Select, k.Add}, // second column
 	}
 }
 
@@ -136,6 +143,10 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 				model.selectedRow[model.cursorRow] = struct{}{}
 				model.tasks[model.cursorRow].MakeTaskCompleted()
 			}
+
+		case key.Matches(msg, model.keys.Add):
+			model.addSelected = true
+
 		case key.Matches(msg, model.keys.Help):
 			model.help.ShowAll = !model.help.ShowAll
 		}
@@ -165,7 +176,6 @@ func createUpperTextPanelBox(text string, height int) string {
 }
 
 func createDescriptionBox(desc string, height int, selected bool) string {
-	height++
 	style := lipgloss.NewStyle().
 		PaddingTop(0).
 		PaddingLeft(0).
@@ -197,17 +207,24 @@ func createLowerPanelTextBox(text string, height int) string {
 	return style.Render(text)
 }
 
-func (model Model) View() string {
+func (model Model) View() string { //nolint:funlen
+	if model.addSelected {
+		return addTaskView()
+	}
 	description := ""
-	habits := ""
+	habits := strings.Builder{}
 	selectedID := 0
 	descriptionSelected := false
+	height := 1
+
+	habits.WriteString("Habits:\n")
 
 	if model.cursorCol == 1 {
 		descriptionSelected = true
 	}
 
 	for taskID, task := range model.tasks {
+		height++
 		taskName := task.Name
 
 		if model.cursorRow == taskID {
@@ -224,20 +241,18 @@ func (model Model) View() string {
 			completed = "x"
 		}
 
-		habits += fmt.Sprintf("[%s] %s\n", completed, taskName)
+		habits.WriteString(fmt.Sprintf("[%s] %s\n", completed, taskName))
 	}
 
 	view := ""
 
 	if len(model.tasks) == 0 {
-		habits += "No habits."
+		habits.WriteString("No habits.")
+
 		description = "Add new task and start forming habit."
 	}
 
-	habits = "Habits:\n" + strings.TrimSuffix(habits, "\n")
-	height := strings.Count(habits, "\n")
-
-	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(habits, height),
+	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(strings.TrimSuffix(habits.String(), "\n"), height),
 		createDescriptionBox(description, height, descriptionSelected))
 
 	if len(model.tasks) != 0 {
@@ -264,4 +279,44 @@ func (model Model) View() string {
 	view += "\n" + helpView
 
 	return view
+}
+
+func addTaskView() string {
+	buttonStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("#FFF7DB")).
+		Background(lipgloss.Color("#888B7E")).
+		Padding(0, 3).
+		MarginTop(1)
+
+	activeButtonStyle := buttonStyle.Copy().
+		Foreground(lipgloss.Color("#FFF7DB")).
+		Background(lipgloss.Color("#F25D94")).
+		MarginRight(2).
+		Underline(true)
+
+	okButton := activeButtonStyle.Render("Yes")
+	cancelButton := buttonStyle.Render("Maybe")
+
+	question := lipgloss.NewStyle().Width(50).Align(lipgloss.Center).Render("Are you sure you want to eat marmalade?")
+	buttons := lipgloss.JoinHorizontal(lipgloss.Top, okButton, cancelButton)
+	ui := lipgloss.JoinVertical(lipgloss.Center, question, buttons)
+
+	width := 2
+	dialogBoxStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color("#874BFD")).
+		Padding(1, 0).
+		BorderTop(true).
+		BorderLeft(true).
+		BorderRight(true).
+		BorderBottom(true)
+	dialog := lipgloss.Place(width, 9,
+		lipgloss.Center, lipgloss.Center,
+		dialogBoxStyle.Render(ui),
+		lipgloss.WithWhitespaceChars("猫咪"),
+
+		lipgloss.WithWhitespaceForeground(lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}),
+	)
+
+	return dialog
 }
