@@ -25,7 +25,6 @@ type Model struct {
 	selectedRow map[int]struct{}
 	keys        keyMap
 	help        help.Model
-	addSelected bool
 }
 
 func NewTuiModel(tasks habit.TaskList) Model {
@@ -63,13 +62,20 @@ func NewTuiModel(tasks habit.TaskList) Model {
 				key.WithKeys("a"),
 				key.WithHelp("a", "add task"),
 			),
+			Delete: key.NewBinding(
+				key.WithKeys("d"),
+				key.WithHelp("d", "delete task"),
+			),
+			Edit: key.NewBinding(
+				key.WithKeys("e"),
+				key.WithHelp("e", "edit task short name or description"),
+			),
 			Quit: key.NewBinding(
 				key.WithKeys("q", "esc", "ctrl+c"),
 				key.WithHelp("q", "quit"),
 			),
 		},
-		help:        help.New(),
-		addSelected: false,
+		help: help.New(),
 	}
 
 	for tID, t := range tasks {
@@ -93,6 +99,8 @@ type keyMap struct {
 	Select key.Binding
 	Help   key.Binding
 	Add    key.Binding
+	Delete key.Binding
+	Edit   key.Binding
 	Quit   key.Binding
 }
 
@@ -145,8 +153,14 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 			}
 
 		case key.Matches(msg, model.keys.Add):
-			model.addSelected = true
+			model.tasks = append(model.tasks, habit.NewTask("add name", ""))
 
+		case key.Matches(msg, model.keys.Delete):
+			model.tasks = append(model.tasks[:model.cursorRow], model.tasks[model.cursorRow+1:]...)
+
+			if model.cursorRow > 0 {
+				model.cursorRow--
+			}
 		case key.Matches(msg, model.keys.Help):
 			model.help.ShowAll = !model.help.ShowAll
 		}
@@ -208,9 +222,6 @@ func createLowerPanelTextBox(text string, height int) string {
 }
 
 func (model Model) View() string { //nolint:funlen
-	if model.addSelected {
-		return addTaskView()
-	}
 	description := ""
 	habits := strings.Builder{}
 	selectedID := 0
@@ -279,44 +290,4 @@ func (model Model) View() string { //nolint:funlen
 	view += "\n" + helpView
 
 	return view
-}
-
-func addTaskView() string {
-	buttonStyle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color("#FFF7DB")).
-		Background(lipgloss.Color("#888B7E")).
-		Padding(0, 3).
-		MarginTop(1)
-
-	activeButtonStyle := buttonStyle.Copy().
-		Foreground(lipgloss.Color("#FFF7DB")).
-		Background(lipgloss.Color("#F25D94")).
-		MarginRight(2).
-		Underline(true)
-
-	okButton := activeButtonStyle.Render("Yes")
-	cancelButton := buttonStyle.Render("Maybe")
-
-	question := lipgloss.NewStyle().Width(50).Align(lipgloss.Center).Render("Are you sure you want to eat marmalade?")
-	buttons := lipgloss.JoinHorizontal(lipgloss.Top, okButton, cancelButton)
-	ui := lipgloss.JoinVertical(lipgloss.Center, question, buttons)
-
-	width := 2
-	dialogBoxStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("#874BFD")).
-		Padding(1, 0).
-		BorderTop(true).
-		BorderLeft(true).
-		BorderRight(true).
-		BorderBottom(true)
-	dialog := lipgloss.Place(width, 9,
-		lipgloss.Center, lipgloss.Center,
-		dialogBoxStyle.Render(ui),
-		lipgloss.WithWhitespaceChars("猫咪"),
-
-		lipgloss.WithWhitespaceForeground(lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}),
-	)
-
-	return dialog
 }
