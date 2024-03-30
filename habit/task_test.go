@@ -142,7 +142,7 @@ func TestTaskUnCompletion(t *testing.T) {
 	}
 }
 
-func TestTaskJSONState(t *testing.T) {
+func TestTaskJSONState(t *testing.T) { //nolint:funlen
 	t.Parallel()
 
 	dit := dayIncreasingTime{time.Date(2023, time.October, 3, 15, 33, 0, 0, time.UTC)}
@@ -180,6 +180,7 @@ func TestTaskJSONState(t *testing.T) {
 	}
 
 	defer func() {
+		file.Close()
 		os.Remove(file.Name())
 	}()
 
@@ -188,7 +189,12 @@ func TestTaskJSONState(t *testing.T) {
 		t.Fatalf("Failed to json save: %v", err)
 	}
 
-	loadedTasks, err := habitui.JSONLoadTasks(file.Name())
+	bytes, err := os.ReadFile(file.Name())
+	if err != nil {
+		t.Fatalf("Failed to open file: %v", err)
+	}
+
+	loadedTasks, err := habitui.JSONLoadTasks(bytes)
 	if err != nil {
 		t.Fatalf("Failed to load tasks from json: %v", err)
 	}

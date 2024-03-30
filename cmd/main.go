@@ -15,15 +15,20 @@ func main() {
 	tasksFile := flag.String("data", ".habitui.json", "a name of for loading/saving tasks data")
 	flag.Parse()
 
-	tasks, err := habit.JSONLoadTasks(*tasksFile)
+	var tasks habit.TaskList
 
+	file, err := os.ReadFile(*tasksFile)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		fmt.Println("failed to load tasks:", err) //nolint:forbidigo
+		fmt.Printf("failed to open tasks file '%s': %v\n", *tasksFile, err) //nolint:forbidigo
 		os.Exit(1)
 	}
 
-	if tasks == nil {
-		tasks = habit.TaskList{}
+	if !errors.Is(err, os.ErrNotExist) {
+		tasks, err = habit.JSONLoadTasks(file)
+		if err != nil {
+			fmt.Println("failed to load tasks:", err) //nolint:forbidigo
+			os.Exit(1)
+		}
 	}
 
 	prog := tea.NewProgram(tui.NewTuiModel(tasks))

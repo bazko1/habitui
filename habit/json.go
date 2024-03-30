@@ -27,12 +27,7 @@ func (task *Task) ToJSONTask() JSONTask {
 	}
 }
 
-func JSONLoadTasks(filename string) (TaskList, error) {
-	bytes, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("load json failed to read file(%s): %w", filename, err)
-	}
-
+func JSONLoadTasks(bytes []byte) (TaskList, error) {
 	jsonTasks := []JSONTask{}
 
 	if err := json.Unmarshal(bytes, &jsonTasks); err != nil {

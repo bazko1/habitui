@@ -24,6 +24,7 @@ type Model struct {
 	cursorCol   int
 	selectedRow map[int]struct{}
 	keys        keyMap
+	editEnabled bool
 	help        help.Model
 }
 
@@ -75,7 +76,8 @@ func NewTuiModel(tasks habit.TaskList) Model {
 				key.WithHelp("q", "quit"),
 			),
 		},
-		help: help.New(),
+		editEnabled: false,
+		help:        help.New(),
 	}
 
 	for tID, t := range tasks {
@@ -120,7 +122,11 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, model.keys.Quit):
-			return model, tea.Quit
+			if !model.editEnabled {
+				return model, tea.Quit
+			}
+
+			model.editEnabled = false
 
 		case key.Matches(msg, model.keys.Up):
 			if model.cursorRow > 0 && model.cursorCol == 0 {
@@ -161,6 +167,8 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 			if model.cursorRow > 0 {
 				model.cursorRow--
 			}
+		case key.Matches(msg, model.keys.Edit):
+			model.editEnabled = true
 		case key.Matches(msg, model.keys.Help):
 			model.help.ShowAll = !model.help.ShowAll
 		}
@@ -222,6 +230,10 @@ func createLowerPanelTextBox(text string, height int) string {
 }
 
 func (model Model) View() string { //nolint:funlen
+	if model.editEnabled {
+		// TODO need to make view render editable field
+	}
+
 	description := ""
 	habits := strings.Builder{}
 	selectedID := 0
