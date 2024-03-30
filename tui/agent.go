@@ -7,6 +7,7 @@ import (
 	"github.com/bazko1/habitui/habit"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
@@ -25,10 +26,13 @@ type Model struct {
 	selectedRow map[int]struct{}
 	keys        keyMap
 	editEnabled bool
+	editInput   textinput.Model
 	help        help.Model
 }
 
 func NewTuiModel(tasks habit.TaskList) Model {
+	editInput := textinput.New()
+	editInput.Prompt = ""
 	model := Model{
 		tasks:       tasks,
 		cursorRow:   0,
@@ -77,6 +81,7 @@ func NewTuiModel(tasks habit.TaskList) Model {
 			),
 		},
 		editEnabled: false,
+		editInput:   editInput,
 		help:        help.New(),
 	}
 
@@ -90,7 +95,7 @@ func NewTuiModel(tasks habit.TaskList) Model {
 }
 
 func (model Model) Init() tea.Cmd {
-	return nil
+	return textinput.Blink
 }
 
 type keyMap struct {
@@ -117,16 +122,44 @@ func (k keyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, cyclop
+var editMap = struct { //nolint:gochecknoglobals
+	Quit    key.Binding
+	Confirm key.Binding
+}{
+	key.NewBinding(
+		key.WithKeys("esc", "ctrl+c"),
+		key.WithHelp("esc", "quit")),
+	key.NewBinding(
+		key.WithKeys("enter", "ctrl+j"),
+		key.WithHelp("enter", "confirm")),
+}
+
+func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, funlen, cyclop
 	switch msg := msg.(type) { //nolint: gocritic
 	case tea.KeyMsg:
-		switch {
-		case key.Matches(msg, model.keys.Quit):
-			if !model.editEnabled {
-				return model, tea.Quit
+		if model.editEnabled && model.cursorCol == 1 {
+			switch {
+			case key.Matches(msg, editMap.Quit):
+				model.editEnabled = false
+				model.editInput.Blur()
+				model.editInput.Reset()
+			case key.Matches(msg, editMap.Confirm):
+				model.editEnabled = false
+				model.editInput.Blur()
+				model.tasks[model.cursorRow].Description = model.editInput.Value()
+				model.cursorCol = 0
+				model.editInput.Reset()
 			}
 
-			model.editEnabled = false
+			var cmd tea.Cmd
+			model.editInput, cmd = model.editInput.Update(msg)
+
+			return model, cmd
+		}
+
+		switch {
+		case key.Matches(msg, model.keys.Quit):
+			return model, tea.Quit
 
 		case key.Matches(msg, model.keys.Up):
 			if model.cursorRow > 0 && model.cursorCol == 0 {
@@ -168,7 +201,10 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 				model.cursorRow--
 			}
 		case key.Matches(msg, model.keys.Edit):
-			model.editEnabled = true
+			model.editEnabled = !model.editEnabled
+			if model.editEnabled && !model.editInput.Focused() {
+				model.editInput.Focus()
+			}
 		case key.Matches(msg, model.keys.Help):
 			model.help.ShowAll = !model.help.ShowAll
 		}
@@ -230,10 +266,6 @@ func createLowerPanelTextBox(text string, height int) string {
 }
 
 func (model Model) View() string { //nolint:funlen
-	if model.editEnabled {
-		// TODO need to make view render editable field
-	}
-
 	description := ""
 	habits := strings.Builder{}
 	selectedID := 0
@@ -265,6 +297,11 @@ func (model Model) View() string { //nolint:funlen
 		}
 
 		habits.WriteString(fmt.Sprintf("[%s] %s\n", completed, taskName))
+	}
+
+	if model.editEnabled && model.cursorCol == 1 {
+		model.editInput.Placeholder = description
+		description = model.editInput.View()
 	}
 
 	view := ""
