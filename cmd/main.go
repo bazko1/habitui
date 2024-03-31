@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/bazko1/habitui/habit"
@@ -31,19 +32,36 @@ func main() {
 		}
 	}
 
-	prog := tea.NewProgram(tui.NewTuiModel(tasks))
+	// TODO: This probably should be optional
+	// and if not log file created the debug logs should not be printed
+	// or should be forwarded to dev null or somewhere
+	f, err := tea.LogToFile("debug.log", "debug")
+	if err != nil {
+		fmt.Println("fatal:", err) //// nolint:forbidigo
+		os.Exit(1)
+	}
+	defer f.Close()
+
+	logger := log.Default()
+	logger.Println("starting tui program")
+
+	model := tui.NewTuiModel(tasks)
+	prog := tea.NewProgram(model)
+
+	out, err := prog.Run()
+	if err != nil {
+		logger.Printf("Running tui error: %v", err)
+	}
+
+	model, _ = out.(tui.Model)
 
 	defer func() {
-		err := habit.JSONSaveTasks(*tasksFile, tasks)
+		err := habit.JSONSaveTasks(*tasksFile, model.Tasks())
 		if err != nil {
-			fmt.Println("failed to save tasks: %w", err) //nolint:forbidigo
+			logger.Printf("failed to save tasks: %v", err)
 			os.Exit(1)
 		}
 
 		os.Exit(0)
 	}()
-
-	if _, err := prog.Run(); err != nil {
-		fmt.Printf("Running tui error: %v", err) //nolint:forbidigo
-	}
 }

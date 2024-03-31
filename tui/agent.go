@@ -30,9 +30,8 @@ type Model struct {
 	help        help.Model
 }
 
-func NewTuiModel(tasks habit.TaskList) Model {
+func NewTuiModel(tasks habit.TaskList) Model { //nolint: funlen
 	editInput := textinput.New()
-	editInput.Prompt = ""
 	model := Model{
 		tasks:       tasks,
 		cursorRow:   0,
@@ -98,6 +97,10 @@ func (model Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
+func (model Model) Tasks() habit.TaskList {
+	return model.tasks
+}
+
 type keyMap struct {
 	Up     key.Binding
 	Down   key.Binding
@@ -134,7 +137,7 @@ var editMap = struct { //nolint:gochecknoglobals
 		key.WithHelp("enter", "confirm")),
 }
 
-func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, funlen, cyclop
+func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, funlen, cyclop,gocognit
 	switch msg := msg.(type) { //nolint: gocritic
 	case tea.KeyMsg:
 		if model.editEnabled && model.cursorCol == 1 {
@@ -172,12 +175,12 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 			}
 
 		case key.Matches(msg, model.keys.Right):
-			if model.cursorCol < numWinCols {
+			if model.cursorCol < numWinCols && len(model.tasks) > 0 {
 				model.cursorCol++
 			}
 
 		case key.Matches(msg, model.keys.Left):
-			if model.cursorCol > 0 {
+			if model.cursorCol > 0 && len(model.tasks) > 0 {
 				model.cursorCol--
 			}
 
@@ -192,7 +195,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 			}
 
 		case key.Matches(msg, model.keys.Add):
-			model.tasks = append(model.tasks, habit.NewTask("add name", ""))
+			model.tasks = append(model.tasks, habit.NewTask("add name", "description"))
 
 		case key.Matches(msg, model.keys.Delete):
 			model.tasks = append(model.tasks[:model.cursorRow], model.tasks[model.cursorRow+1:]...)
@@ -201,9 +204,14 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 				model.cursorRow--
 			}
 		case key.Matches(msg, model.keys.Edit):
+			if len(model.tasks) == 0 || model.cursorCol != 1 {
+				break
+			}
+
 			model.editEnabled = !model.editEnabled
 			if model.editEnabled && !model.editInput.Focused() {
 				model.editInput.Focus()
+				model.editInput.Cursor.Blink = true
 			}
 		case key.Matches(msg, model.keys.Help):
 			model.help.ShowAll = !model.help.ShowAll
@@ -274,10 +282,6 @@ func (model Model) View() string { //nolint:funlen
 
 	habits.WriteString("Habits:\n")
 
-	if model.cursorCol == 1 {
-		descriptionSelected = true
-	}
-
 	for taskID, task := range model.tasks {
 		height++
 		taskName := task.Name
@@ -299,9 +303,13 @@ func (model Model) View() string { //nolint:funlen
 		habits.WriteString(fmt.Sprintf("[%s] %s\n", completed, taskName))
 	}
 
-	if model.editEnabled && model.cursorCol == 1 {
-		model.editInput.Placeholder = description
-		description = model.editInput.View()
+	if model.cursorCol == 1 {
+		if model.editEnabled {
+			model.editInput.Placeholder = description
+			description = model.editInput.View()
+		} else {
+			descriptionSelected = true
+		}
 	}
 
 	view := ""
