@@ -30,7 +30,7 @@ type Model struct {
 	help        help.Model
 }
 
-func NewTuiModel(tasks habit.TaskList) Model { //nolint: funlen
+func NewTuiModel(tasks habit.TaskList) Model {
 	editInput := textinput.New()
 	model := Model{
 		tasks:       tasks,
@@ -120,8 +120,9 @@ func (k keyMap) ShortHelp() []key.Binding {
 
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Left, k.Right},   // first column
-		{k.Help, k.Quit, k.Select, k.Add}, // second column
+		{k.Up, k.Down, k.Left, k.Right},
+		{k.Help, k.Quit, k.Select, k.Add},
+		{k.Edit, k.Delete},
 	}
 }
 
@@ -140,7 +141,7 @@ var editMap = struct { //nolint:gochecknoglobals
 func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn, funlen, cyclop,gocognit
 	switch msg := msg.(type) { //nolint: gocritic
 	case tea.KeyMsg:
-		if model.editEnabled && model.cursorCol == 1 {
+		if model.editEnabled {
 			switch {
 			case key.Matches(msg, editMap.Quit):
 				model.editEnabled = false
@@ -148,9 +149,17 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 				model.editInput.Reset()
 			case key.Matches(msg, editMap.Confirm):
 				model.editEnabled = false
-				model.editInput.Blur()
-				model.tasks[model.cursorRow].Description = model.editInput.Value()
-				model.cursorCol = 0
+
+				if model.cursorCol == 0 {
+					model.tasks[model.cursorRow].Name = model.editInput.Value()
+					model.editEnabled = true
+					model.cursorCol = 1
+				} else {
+					model.tasks[model.cursorRow].Description = model.editInput.Value()
+					model.cursorCol = 0
+					model.editInput.Blur()
+				}
+
 				model.editInput.Reset()
 			}
 
@@ -195,7 +204,11 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 			}
 
 		case key.Matches(msg, model.keys.Add):
-			model.tasks = append(model.tasks, habit.NewTask("add name", "description"))
+			model.tasks = append(model.tasks, habit.NewTask("Set name", "Set description"))
+			model.cursorRow = len(model.tasks) - 1
+			model.editEnabled = true
+			model.editInput.Focus()
+			model.editInput.Cursor.Blink = true
 
 		case key.Matches(msg, model.keys.Delete):
 			model.tasks = append(model.tasks[:model.cursorRow], model.tasks[model.cursorRow+1:]...)
@@ -204,7 +217,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 				model.cursorRow--
 			}
 		case key.Matches(msg, model.keys.Edit):
-			if len(model.tasks) == 0 || model.cursorCol != 1 {
+			if len(model.tasks) == 0 {
 				break
 			}
 
@@ -291,7 +304,12 @@ func (model Model) View() string { //nolint:funlen
 			description = task.Description
 
 			if model.cursorCol == 0 {
-				taskName = formatSelectedText(taskName)
+				if model.editEnabled {
+					model.editInput.Placeholder = taskName
+					taskName = model.editInput.View()
+				} else {
+					taskName = formatSelectedText(taskName)
+				}
 			}
 		}
 
