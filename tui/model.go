@@ -20,14 +20,15 @@ const (
 )
 
 type Model struct {
-	tasks       habit.TaskList
-	cursorRow   int
-	cursorCol   int
-	selectedRow map[int]struct{}
-	keys        keyMap
-	editEnabled bool
-	editInput   textinput.Model
-	help        help.Model
+	tasks         habit.TaskList
+	cursorRow     int
+	cursorCol     int
+	selectedRow   map[int]struct{}
+	keys          keyMap
+	editEnabled   bool
+	addingNewTask bool
+	editInput     textinput.Model
+	help          help.Model
 }
 
 func NewTuiModel(tasks habit.TaskList) Model {
@@ -79,9 +80,10 @@ func NewTuiModel(tasks habit.TaskList) Model {
 				key.WithHelp("q", "quit"),
 			),
 		},
-		editEnabled: false,
-		editInput:   editInput,
-		help:        help.New(),
+		editEnabled:   false,
+		addingNewTask: false,
+		editInput:     editInput,
+		help:          help.New(),
 	}
 
 	for tID, t := range tasks {
@@ -152,8 +154,11 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 
 				if model.cursorCol == 0 {
 					model.tasks[model.cursorRow].Name = model.editInput.Value()
-					model.editEnabled = true
-					model.cursorCol = 1
+					if model.addingNewTask {
+						model.editEnabled = true
+						model.cursorCol = 1
+						model.addingNewTask = false
+					}
 				} else {
 					model.tasks[model.cursorRow].Description = model.editInput.Value()
 					model.cursorCol = 0
@@ -207,6 +212,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 			model.tasks = append(model.tasks, habit.NewTask("Set name", "Set description"))
 			model.cursorRow = len(model.tasks) - 1
 			model.editEnabled = true
+			model.addingNewTask = true
 			model.editInput.Focus()
 			model.editInput.Cursor.Blink = true
 
