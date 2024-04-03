@@ -105,6 +105,8 @@ func (task *Task) MakeTaskCompleted() {
 	completionsThisMonth := completionsThisYear[now.Month()]
 
 	if len(completionsThisMonth) == 0 {
+		completionsThisYear[now.Month()] = append(completionsThisMonth, now)
+
 		return
 	}
 

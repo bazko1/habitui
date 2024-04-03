@@ -209,3 +209,28 @@ func TestTaskJSONState(t *testing.T) { //nolint:funlen
 		}
 	}
 }
+
+func TestCompletionChangingMonth(t *testing.T) {
+	t.Parallel()
+	// 2024-03-31 22:38:40.612363099 +0200 CEST
+	startDate := time.Date(2024, 3, 31, 12, 0, 0, 0, time.Local)
+	now := func() time.Time {
+		return startDate
+	}
+	task := habitui.NewTaskWithCustomTime("work on habittui", "daily app grind", now)
+
+	compl := 3
+
+	for range compl {
+		task.MakeTaskCompleted()
+
+		startDate = startDate.AddDate(0, 0, 1)
+	}
+
+	if yc := task.CurrentYearCompletion(); yc != compl {
+		t.Fatalf("Task '%s' should be completed %d times this year while it returned %d",
+			task.Name,
+			compl,
+			yc)
+	}
+}
