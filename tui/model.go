@@ -31,7 +31,7 @@ type Model struct {
 	help          help.Model
 }
 
-func NewTuiModel(tasks habit.TaskList) Model {
+func NewTuiModel(tasks habit.TaskList) Model { //nolint:funlen
 	editInput := textinput.New()
 	model := Model{
 		tasks:       tasks,

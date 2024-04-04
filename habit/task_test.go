@@ -1,7 +1,6 @@
 package habit_test
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -10,12 +9,8 @@ import (
 	"github.com/bazko1/habitui/habit"
 )
 
-const errorTemplate = "Task '%s' should be completed %d times over the %s while it returned %d"
-
-var ErrHabitCount = errors.New("")
-
 func HabitCountError(hName string, period string, expected int, count int) error {
-	return fmt.Errorf(errorTemplate,
+	return fmt.Errorf("Task '%s' should be completed %d times over the %s while it returned %d", //nolint:goerr113
 		hName,
 		expected,
 		period,
@@ -34,25 +29,25 @@ func (dit *dayIncreasingTime) AddDay() {
 	dit.CurrentTime = dit.CurrentTime.AddDate(0, 0, 1)
 }
 
-func validateCompletion(h habit.Task, expectedWeek int, expectedMonth int, expectedYear int) error {
-	wct, mct, yct := h.AllCompletion()
+func validateCompletion(habit habit.Task, expectedWeek int, expectedMonth int, expectedYear int) error {
+	wct, mct, yct := habit.AllCompletion()
 
 	if wct != expectedWeek {
-		return HabitCountError(h.Name,
+		return HabitCountError(habit.Name,
 			"week",
 			expectedWeek,
 			wct)
 	}
 
 	if mct != expectedMonth {
-		return HabitCountError(h.Name,
+		return HabitCountError(habit.Name,
 			"month",
 			expectedMonth,
 			mct)
 	}
 
 	if yct != expectedYear {
-		return HabitCountError(h.Name,
+		return HabitCountError(habit.Name,
 			"year",
 			expectedYear,
 			yct)
