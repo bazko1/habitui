@@ -26,6 +26,13 @@ func (task *Task) CurrentYearCompletion() int {
 	return task.YearCompletion(task.GetTime().Year())
 }
 
+// AllCompletion returns completion for current week, month and year.
+func (task *Task) AllCompletion() (int, int, int) {
+	return task.CurrentWeekCompletion(),
+		task.CurrentMonthCompletion(),
+		task.CurrentYearCompletion()
+}
+
 // Returns number of completions over the given year.
 func (task *Task) YearCompletion(year int) int {
 	completionsYear, exists := task.yearlyTaskCompletion[year]

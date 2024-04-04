@@ -1,12 +1,26 @@
 package habit_test
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"testing"
 	"time"
 
-	habitui "github.com/bazko1/habitui/habit"
+	"github.com/bazko1/habitui/habit"
 )
+
+const errorTemplate = "Task '%s' should be completed %d times over the %s while it returned %d"
+
+var ErrHabitCount = errors.New("")
+
+func HabitCountError(hName string, period string, expected int, count int) error {
+	return fmt.Errorf(errorTemplate,
+		hName,
+		expected,
+		period,
+		count)
+}
 
 type dayIncreasingTime struct {
 	CurrentTime time.Time
@@ -20,10 +34,37 @@ func (dit *dayIncreasingTime) AddDay() {
 	dit.CurrentTime = dit.CurrentTime.AddDate(0, 0, 1)
 }
 
+func validateCompletion(h habit.Task, expectedWeek int, expectedMonth int, expectedYear int) error {
+	wct, mct, yct := h.AllCompletion()
+
+	if wct != expectedWeek {
+		return HabitCountError(h.Name,
+			"week",
+			expectedWeek,
+			wct)
+	}
+
+	if mct != expectedMonth {
+		return HabitCountError(h.Name,
+			"month",
+			expectedMonth,
+			mct)
+	}
+
+	if yct != expectedYear {
+		return HabitCountError(h.Name,
+			"year",
+			expectedYear,
+			yct)
+	}
+
+	return nil
+}
+
 func TestTaskCompletionSingleDay(t *testing.T) {
 	t.Parallel()
 
-	task := habitui.NewTask("test", "test description")
+	task := habit.NewTask("test", "test description")
 
 	task.MakeTaskCompleted()
 	task.MakeTaskCompleted()
@@ -49,7 +90,7 @@ func TestTaskWithChangingDay(t *testing.T) {
 
 	// new year new me resolution
 	dit := dayIncreasingTime{time.Date(2000, time.January, 1, 12, 0, 0, 0, time.UTC)}
-	task := habitui.NewTaskWithCustomTime("hit the gym", "test description", dit.Now)
+	task := habit.NewTaskWithCustomTime("hit the gym", "test description", dit.Now)
 
 	dit.AddDay()
 	task.MakeTaskCompleted()
@@ -106,7 +147,7 @@ func TestTaskUnCompletion(t *testing.T) {
 	t.Parallel()
 
 	dit := dayIncreasingTime{time.Date(2023, time.October, 3, 15, 33, 0, 0, time.UTC)}
-	task := habitui.NewTaskWithCustomTime("hit the gym", "test description", dit.Now)
+	task := habit.NewTaskWithCustomTime("hit the gym", "test description", dit.Now)
 	numCompletions := 6
 
 	for range numCompletions - 1 {
@@ -146,10 +187,10 @@ func TestTaskJSONState(t *testing.T) { //nolint:funlen
 	t.Parallel()
 
 	dit := dayIncreasingTime{time.Date(2023, time.October, 3, 15, 33, 0, 0, time.UTC)}
-	tasks := habitui.TaskList{
-		habitui.NewTaskWithCustomTime("go for a walk", "walkin and dreamin...", dit.Now),
-		habitui.NewTaskWithCustomTime("strength training", "gym or home calistenics training", dit.Now),
-		habitui.NewTaskWithCustomTime("english lesson", "mobile app lesson", dit.Now),
+	tasks := habit.TaskList{
+		habit.NewTaskWithCustomTime("go for a walk", "walkin and dreamin...", dit.Now),
+		habit.NewTaskWithCustomTime("strength training", "gym or home calisthenics training", dit.Now),
+		habit.NewTaskWithCustomTime("english lesson", "mobile app lesson", dit.Now),
 	}
 	inARowCompl := 4
 
@@ -184,7 +225,7 @@ func TestTaskJSONState(t *testing.T) { //nolint:funlen
 		os.Remove(file.Name())
 	}()
 
-	err = habitui.JSONSaveTasks(file.Name(), tasks)
+	err = habit.JSONSaveTasks(file.Name(), tasks)
 	if err != nil {
 		t.Fatalf("Failed to json save: %v", err)
 	}
@@ -194,7 +235,7 @@ func TestTaskJSONState(t *testing.T) { //nolint:funlen
 		t.Fatalf("Failed to open file: %v", err)
 	}
 
-	loadedTasks, err := habitui.JSONLoadTasks(bytes)
+	loadedTasks, err := habit.JSONLoadTasks(bytes)
 	if err != nil {
 		t.Fatalf("Failed to load tasks from json: %v", err)
 	}
@@ -217,7 +258,7 @@ func TestCompletionChangingMonth(t *testing.T) {
 	now := func() time.Time {
 		return startDate
 	}
-	task := habitui.NewTaskWithCustomTime("work on habittui", "daily app grind", now)
+	task := habit.NewTaskWithCustomTime("work on habittui", "daily app grind", now)
 
 	compl := 3
 
@@ -227,10 +268,7 @@ func TestCompletionChangingMonth(t *testing.T) {
 		startDate = startDate.AddDate(0, 0, 1)
 	}
 
-	if yc := task.CurrentYearCompletion(); yc != compl {
-		t.Fatalf("Task '%s' should be completed %d times this year while it returned %d",
-			task.Name,
-			compl,
-			yc)
+	if err := validateCompletion(task, 2, 2, compl); err != nil {
+		t.Fatal(err.Error())
 	}
 }
