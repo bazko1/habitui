@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 
@@ -14,6 +15,7 @@ import (
 
 func main() {
 	tasksFile := flag.String("data", ".habitui.json", "a name of for loading/saving tasks data")
+	enableDebug := flag.Bool("debug", false, "log debug data to file")
 	flag.Parse()
 
 	var tasks habit.TaskList
@@ -32,15 +34,16 @@ func main() {
 		}
 	}
 
-	// TODO: This probably should be optional
-	// and if not log file created the debug logs should not be printed
-	// or should be forwarded to dev null or somewhere
-	f, err := tea.LogToFile("debug.log", "debug")
-	if err != nil {
-		fmt.Println("fatal:", err) //// nolint:forbidigo
-		os.Exit(1)
+	if *enableDebug {
+		f, err := tea.LogToFile("debug.log", "debug")
+		if err != nil {
+			fmt.Println("fatal:", err) //// nolint:forbidigo
+			os.Exit(1)
+		}
+		defer f.Close()
+	} else {
+		log.SetOutput(io.Discard)
 	}
-	defer f.Close()
 
 	logger := log.Default()
 	logger.Println("starting tui program")
@@ -62,6 +65,7 @@ func main() {
 			os.Exit(1)
 		}
 
+		logger.Println("saved state closing")
 		os.Exit(0)
 	}()
 }

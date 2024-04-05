@@ -94,6 +94,7 @@ func TestTaskWithChangingDay(t *testing.T) {
 	task.MakeTaskCompleted()
 
 	dit.AddDay()
+
 	task.MakeTaskCompleted()
 
 	if compl := task.CurrentMonthCompletion(); compl != 3 {
@@ -116,8 +117,8 @@ func TestTaskWithChangingDay(t *testing.T) {
 	// this moves date to sunday
 	dit.AddDay()
 
-	if task.CurrentWeekCompletion() != 3 {
-		t.Fatalf("Task should be completed 3 times this week while it returned %d", task.CurrentStrike())
+	if weekCpl := task.CurrentWeekCompletion(); weekCpl != 2 {
+		t.Fatalf("Task should be completed %d times this week while it returned %d", 2, weekCpl)
 	}
 
 	// this moves date to monday so the weekly counter should be 0 now
@@ -248,23 +249,39 @@ func TestTaskJSONState(t *testing.T) { //nolint:funlen
 
 func TestCompletionChangingMonth(t *testing.T) {
 	t.Parallel()
-	// 2024-03-31 22:38:40.612363099 +0200 CEST
-	startDate := time.Date(2024, 3, 31, 12, 0, 0, 0, time.Local)
+	// 2024-03-30
+	startDate := time.Date(2024, 3, 30, 12, 0, 0, 0, time.Local)
 	now := func() time.Time {
 		return startDate
 	}
 	task := habit.NewTaskWithCustomTime("work on habittui", "daily app grind", now)
 
-	compl := 7
+	compl := 9
 
-	for range compl {
+	// first check completions in March
+	for c := range 2 {
 		task.MakeTaskCompleted()
+
+		if err := validateCompletion(task, c+1, c+1, c+1); err != nil {
+			t.Fatal(err.Error())
+		}
 
 		startDate = startDate.AddDate(0, 0, 1)
 	}
 
-	// FIXME: Weekly completion is not working correctly
-	if err := validateCompletion(task, 7, 6, compl); err != nil {
+	// check completions in April
+	for c := range compl - 2 {
+		task.MakeTaskCompleted()
+
+		if err := validateCompletion(task, c+1, c+1, c+3); err != nil {
+			t.Fatal(err.Error())
+		}
+
+		startDate = startDate.AddDate(0, 0, 1)
+	}
+
+	// monday
+	if err := validateCompletion(task, 0, compl-2, compl); err != nil {
 		t.Fatal(err.Error())
 	}
 }

@@ -81,7 +81,12 @@ func (task *Task) WeekCompletion(year int, month time.Month, day int) int {
 		weekDay = 7
 	}
 
-	weekBegin := time.Date(year, month, day, 0, 0, 0, 1, task.GetTime().Location()).AddDate(0, 0, -weekDay)
+	weekBegin := time.Date(year, month, day, 0, 0, 0, 0, task.GetTime().Location()).AddDate(0, 0, 1-weekDay)
+
+	// handle overlapping months
+	if weekBegin.Month() != end.Month() {
+		mcp = append(task.MonthCompletionTime(weekBegin.Year(), weekBegin.Month()), mcp...)
+	}
 
 	counter := 0
 
