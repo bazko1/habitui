@@ -9,11 +9,19 @@ import (
 	"github.com/bazko1/habitui/habit"
 )
 
-func HabitCountError(hName string, period string, expected int, count int) error {
+func habitCountError(hName string, period string, expected int, count int) error {
 	return fmt.Errorf("Task '%s' should be completed %d times over the %s while it returned %d", //nolint:goerr113
 		hName,
 		expected,
 		period,
+		count)
+}
+
+func habitStrikeError(hName string, period string, expected int, count int) error {
+	return fmt.Errorf("Task '%s' should have %s strike equal to %d while it returned %d", //nolint:goerr113
+		hName,
+		period,
+		expected,
 		count)
 }
 
@@ -33,22 +41,49 @@ func validateCompletion(habit habit.Task, expectedWeek int, expectedMonth int, e
 	wct, mct, yct := habit.AllCompletion()
 
 	if wct != expectedWeek {
-		return HabitCountError(habit.Name,
+		return habitCountError(habit.Name,
 			"week",
 			expectedWeek,
 			wct)
 	}
 
 	if mct != expectedMonth {
-		return HabitCountError(habit.Name,
+		return habitCountError(habit.Name,
 			"month",
 			expectedMonth,
 			mct)
 	}
 
 	if yct != expectedYear {
-		return HabitCountError(habit.Name,
+		return habitCountError(habit.Name,
 			"year",
+			expectedYear,
+			yct)
+	}
+
+	return nil
+}
+
+func validateStrike(habit habit.Task, expectedCurrent, expectedMonth, expectedYear int) error {
+	wct, mct, yct := habit.AllStrike()
+
+	if wct != expectedCurrent {
+		return habitStrikeError(habit.Name,
+			"current",
+			expectedCurrent,
+			wct)
+	}
+
+	if mct != expectedMonth {
+		return habitStrikeError(habit.Name,
+			"best monthly",
+			expectedMonth,
+			mct)
+	}
+
+	if yct != expectedYear {
+		return habitStrikeError(habit.Name,
+			"best yearly",
 			expectedYear,
 			yct)
 	}

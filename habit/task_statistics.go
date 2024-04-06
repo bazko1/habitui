@@ -33,6 +33,13 @@ func (task *Task) AllCompletion() (int, int, int) {
 		task.CurrentYearCompletion()
 }
 
+// AllStrike returns current, best weekly and best yearly strike information.
+func (task *Task) AllStrike() (int, int, int) {
+	return task.CurrentStrike(),
+		task.CurrentMonthBestStrike(),
+		task.CurrentYearBestStrike()
+}
+
 // Returns number of completions over the given year.
 func (task *Task) YearCompletion(year int) int {
 	completionsYear, exists := task.yearlyTaskCompletion[year]
