@@ -137,6 +137,10 @@ func (task *Task) YearBestStrike(year int) int {
 	return max
 }
 
+// TODO: CurrentMonthBestStrike actually shows best strike ever that happens to also
+// have completions in given month. This probably should be refactored so that month best
+// strike means longest completion over period of ~30 days (given month) and returned values
+// should be in range 0-31.
 func (task *Task) MonthBestStrike(year int, month time.Month) int {
 	monthlyStrikes, exist := task.yearlyBestStrike[year]
 	if !exist {

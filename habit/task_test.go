@@ -301,6 +301,10 @@ func TestCompletionChangingMonth(t *testing.T) {
 			t.Fatal(err.Error())
 		}
 
+		if err := validateStrike(task, c+1, c+1, c+1); err != nil {
+			t.Fatal(err.Error())
+		}
+
 		startDate = startDate.AddDate(0, 0, 1)
 	}
 
@@ -309,6 +313,12 @@ func TestCompletionChangingMonth(t *testing.T) {
 		task.MakeTaskCompleted()
 
 		if err := validateCompletion(task, c+1, c+1, c+3); err != nil {
+			t.Fatal(err.Error())
+		}
+
+		// TODO: Probably the monthly will change that it will return c+1 as
+		// number of completions only in April will count.
+		if err := validateStrike(task, c+3, c+3, c+3); err != nil {
 			t.Fatal(err.Error())
 		}
 

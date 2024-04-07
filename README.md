@@ -30,14 +30,8 @@ l - Navigate to window right, for example from tasks to description window. This
 h - Navigate to window left. <br>
 e - Edit data in current window. Allows to edit task short name or description.
         After edit, user press enter and a pop up with confirm changes 'y/n' will come. <br>
-a/c - To be decided if both (add/create) - creates new habit task. Will be based on popup/floating windows that ask you questions
-      like: enter (short name), enter long description. <br>
-      Alternatively this will make clear terminal window and open a new one with empty task short name and description. <br>
-      User will move over short name and description using hl keys press 'i' (insert) to add data.  <br>
+a - add new task and move into task name/description edit mode. <br>
 d - Deletes currently selected task, a confirmation window will pop up. <br>
-s - Saves changes that were made during current session (to be decided if this will be actually handled or saves will be done
-automatically). <br>
-r - Restart session (revert), reverts all (or last) changes that were done before saving or after last save (undo?). <br>
 p - period (to be decided), changes period that we want to manage (by default daily), but some tasks could be defined to be 
 monthly, yearly etc. for example monthly task pay this month bills. <br>
 ## Consistent state 
@@ -47,3 +41,5 @@ to some database.
 ## Configurability
 To be decided what mechanism should be changed and possibly modifiable using command line args or config file.
 
+## Developement status
+App dev in progress.

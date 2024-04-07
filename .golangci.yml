@@ -12,6 +12,8 @@ linters:
     - golint
     - exhaustivestruct
     - structcheck
+    - musttag
+    - varnamelen
 
 linters-settings:
   cyclop:

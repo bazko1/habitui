@@ -16,9 +16,11 @@ type Task struct {
 	CreationDate time.Time
 	GetTime      func() time.Time `json:"-"`
 
-	yearlyTaskCompletion   YearlyTaskCompletion
-	lastTimeCompleted      time.Time
-	currentStrike          int
+	yearlyTaskCompletion YearlyTaskCompletion
+	lastTimeCompleted    time.Time
+	currentStrike        int
+	// TODO: CurrentMonthBestStrike actually shows
+	bestStrikeThisMonth    int
 	yearlyBestStrike       YearlyBestStrike
 	bestStrikeLastFinished time.Time
 }
@@ -41,6 +43,7 @@ func NewTaskWithCustomTime(name, description string, getTime func() time.Time) T
 		getTime,
 		make(YearlyTaskCompletion),
 		time.Time{},
+		0,
 		0,
 		make(YearlyBestStrike),
 		time.Time{},

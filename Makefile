@@ -5,3 +5,5 @@ run-dev:
 	@go run cmd/main.go -debug
 test:
 	go test ./...
+gen-markdown:
+	pandoc README.md > README.html
