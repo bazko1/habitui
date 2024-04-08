@@ -330,3 +330,28 @@ func TestCompletionChangingMonth(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 }
+
+func TestCompletionChangingYear(t *testing.T) {
+	t.Parallel()
+	// 2023-12-26
+	startDate := time.Date(2024, 12, 26, 8, 0, 0, 0, time.Local)
+	now := func() time.Time {
+		return startDate
+	}
+	task := habit.NewTaskWithCustomTime("work on habittui", "daily app grind", now)
+	compl := 10
+
+	for range compl {
+		task.MakeTaskCompleted()
+
+		startDate = startDate.AddDate(0, 0, 1)
+	}
+
+	if err := validateStrike(task, compl, compl, compl); err != nil {
+		t.Fatal(err.Error())
+	}
+	// monday
+	if err := validateCompletion(task, 0, compl, compl); err != nil {
+		t.Fatal(err.Error())
+	}
+}
