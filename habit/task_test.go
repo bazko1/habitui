@@ -347,11 +347,12 @@ func TestCompletionChangingYear(t *testing.T) {
 		startDate = startDate.AddDate(0, 0, 1)
 	}
 
+	// 2025-01-05 and not completed yet
 	if err := validateStrike(task, compl, compl, compl); err != nil {
 		t.Fatal(err.Error())
 	}
-	// monday
-	if err := validateCompletion(task, 0, compl, compl); err != nil {
+
+	if err := validateCompletion(task, 6, 4, 4); err != nil {
 		t.Fatal(err.Error())
 	}
 }

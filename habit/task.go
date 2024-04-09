@@ -65,7 +65,7 @@ func (task *Task) MakeTaskCompleted() {
 		return
 	}
 
-	if task.lastTimeCompleted.IsZero() {
+	if task.lastTimeCompleted.Year() != now.Year() {
 		initializeDateMaps(
 			task.yearlyTaskCompletion,
 			now.Year(),
@@ -77,10 +77,12 @@ func (task *Task) MakeTaskCompleted() {
 				return init
 			})
 
-		task.lastTimeCompleted = now
 		initializeDateMaps(task.yearlyBestStrike, now.Year(),
 			now.Month(), func() int { return 1 })
+	}
 
+	if task.lastTimeCompleted.IsZero() {
+		task.lastTimeCompleted = now
 		task.currentStrike = 1
 		task.bestStrikeLastFinished = now
 
