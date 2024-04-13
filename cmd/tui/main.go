@@ -1,3 +1,4 @@
+//nolint:forbidigo //prints for client are not debug statements
 package main
 
 import (
@@ -22,14 +23,14 @@ func main() {
 
 	file, err := os.ReadFile(*tasksFile)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		fmt.Printf("failed to open tasks file '%s': %v\n", *tasksFile, err) //nolint:forbidigo
+		fmt.Printf("failed to open tasks file '%s': %v\n", *tasksFile, err)
 		os.Exit(1)
 	}
 
 	if !errors.Is(err, os.ErrNotExist) {
 		tasks, err = habit.JSONLoadTasks(file)
 		if err != nil {
-			fmt.Println("failed to load tasks:", err) //nolint:forbidigo
+			fmt.Println("failed to load tasks:", err)
 			os.Exit(1)
 		}
 	}
@@ -37,7 +38,7 @@ func main() {
 	if *enableDebug {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {
-			fmt.Println("fatal:", err) //// nolint:forbidigo
+			fmt.Println("fatal:", err)
 			os.Exit(1)
 		}
 		defer f.Close()
