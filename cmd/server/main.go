@@ -15,6 +15,8 @@ func main() {
 		return
 	}
 
+	fmt.Println("Server is listening at:", server.Addr)
+
 	if err := server.ListenAndServe(); err != nil {
 		fmt.Printf("Failed to listen and serve: %v", err)
 
