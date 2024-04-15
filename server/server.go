@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -80,6 +81,16 @@ func createHandler() http.Handler {
 		}
 	}
 
+	// checkToken := func(next http.Handler) http.HandlerFunc {
+	// 	return func(w http.ResponseWriter, r *http.Request) {
+	// 		token := r.Header.Get("Authorization")
+	// 		if token == "" {
+	// 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	// 		}
+	// 		next.ServeHTTP(w, r)
+	// 	}
+	// }
+
 	r := http.NewServeMux()
 
 	r.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +98,23 @@ func createHandler() http.Handler {
 	})
 
 	r.HandleFunc("POST /user/create", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("creating user"))
+		user := UserModel{}
+		decoder := json.NewDecoder(r.Body)
+
+		if err := decoder.Decode(&user); err != nil {
+			log.Printf("error when decoding body: %v", err)
+			http.Error(w, "Failed to decode or missing data", http.StatusInternalServerError)
+		}
+
+		bytes, err := json.Marshal(user)
+		if err != nil {
+			log.Printf("error when marshaling user: %v", err)
+
+			return
+		}
+
+		// TODO handle controller creating new user 
+		_, _ = w.Write(bytes)
 	})
 
 	r.HandleFunc("GET /user/habits", func(w http.ResponseWriter, r *http.Request) {

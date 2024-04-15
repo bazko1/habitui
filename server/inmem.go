@@ -1,6 +1,8 @@
 package server
 
-import "github.com/bazko1/habitui/habit"
+import (
+	"github.com/bazko1/habitui/habit"
+)
 
 type InMemoryController struct {
 	users map[string]UserModel
@@ -13,13 +15,19 @@ func NewInMemoryController() InMemoryController {
 func (controller *InMemoryController) CreateNewuser(username,
 	email,
 	password string,
-) {
+) (bool, error) {
+	if _, exists := controller.users[username]; exists {
+		return false, ErrUsernameExists
+	}
+
 	controller.users[username] = UserModel{
-		username:  username,
-		email:     email,
-		passwordd: password,
+		Username:  username,
+		Email:     email,
+		Passwordd: password,
 		habits:    make(habit.TaskList, 0),
 	}
+
+	return true, nil
 }
 
 func (controller *InMemoryController) UpdateUserHabits(username string,

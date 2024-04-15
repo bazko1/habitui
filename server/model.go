@@ -1,10 +1,12 @@
 package server
 
-import "github.com/bazko1/habitui/habit"
+import (
+	"github.com/bazko1/habitui/habit"
+)
 
 type UserModel struct {
-	username  string
-	email     string
-	passwordd string
+	Username  string
+	Email     string
+	Passwordd string `json:"-"`
 	habits    habit.TaskList
 }
