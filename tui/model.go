@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bazko1/habitui/habit"
 	"github.com/charmbracelet/bubbles/help"
@@ -348,6 +349,7 @@ func (model Model) View() string { //nolint:funlen
 		createDescriptionBox(description, height, descriptionSelected))
 
 	if len(model.tasks) != 0 {
+		dateToday := model.tasks[0].GetTime()
 		selectedTask := model.tasks[selectedID]
 		numOfStats := 4
 		lowerPanel := lipgloss.JoinHorizontal(
@@ -358,10 +360,11 @@ func (model Model) View() string { //nolint:funlen
 				selectedTask.CurrentYearBestStrike()), numOfStats),
 
 			createLowerPanelTextBox(
-				fmt.Sprintf("Completion:\n\tThis week: %d\n\tThis month: %d\n\tThis year: %d",
+				fmt.Sprintf("Completion:\n\tThis week: %d / 7\n\tThis month: %d / %d \n\tThis year: %d / %d",
 					selectedTask.CurrentWeekCompletion(),
-					selectedTask.CurrentMonthCompletion(),
-					selectedTask.CurrentYearCompletion()), numOfStats),
+					selectedTask.CurrentMonthCompletion(), getDaysInMonth(dateToday),
+					selectedTask.CurrentYearCompletion(), getDaysInYear(dateToday)),
+				numOfStats),
 		)
 
 		view = lipgloss.JoinVertical(1, view, lowerPanel)
@@ -371,4 +374,12 @@ func (model Model) View() string { //nolint:funlen
 	view += "\n" + helpView
 
 	return view
+}
+
+func getDaysInMonth(t time.Time) int {
+	return 32 - time.Date(t.Year(), t.Month(), 32, 0, 0, 0, 0, time.UTC).Day()
+}
+
+func getDaysInYear(t time.Time) int {
+	return time.Date(t.Year(), 12, 31, 0, 0, 0, 0, time.UTC).YearDay()
 }

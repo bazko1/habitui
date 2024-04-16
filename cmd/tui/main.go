@@ -16,7 +16,7 @@ import (
 
 func main() {
 	tasksFile := flag.String("data", ".habitui.json", "a name of for loading/saving tasks data")
-	enableDebug := flag.Bool("debug", false, "log debug data to file")
+	disableDebug := flag.Bool("no-debug", false, "do not log debug data to file")
 	flag.Parse()
 
 	var tasks habit.TaskList
@@ -35,7 +35,7 @@ func main() {
 		}
 	}
 
-	if *enableDebug {
+	if !*disableDebug {
 		f, err := tea.LogToFile("debug.log", "debug")
 		if err != nil {
 			fmt.Println("fatal:", err)
