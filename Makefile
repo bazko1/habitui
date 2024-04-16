@@ -1,8 +1,8 @@
 run:
-	@go run cmd/tui/main.go -debug
+	@go run cmd/tui/main.go
 run-dev:
 	@cp testdata/.habitui.json .
-	@go run cmd/tui/main.go -debug
+	@go run cmd/tui/main.go
 serve:
 	go run cmd/server/main.go
 test:
