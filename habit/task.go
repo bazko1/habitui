@@ -65,7 +65,7 @@ func (task *Task) MakeTaskCompleted() {
 		return
 	}
 
-	if task.lastTimeCompleted.Year() != now.Year() || task.lastTimeCompleted.Month() != now.Month() {
+	if task.lastTimeCompleted.Year() != now.Year() {
 		initializeDateMaps(
 			task.yearlyTaskCompletion,
 			now.Year(),
