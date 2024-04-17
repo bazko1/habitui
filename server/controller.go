@@ -7,8 +7,9 @@ import (
 )
 
 var (
-	ErrUsernameExists  = errors.New("user with given username already exists")
-	ErrEmailRegistered = errors.New("some user already registered with given email")
+	ErrUsernameExists  = errors.New("User with given username already exists")
+	ErrInccorectInput  = errors.New("Incorrect input provided")
+	ErrEmailRegistered = errors.New("Some user already registered with given email")
 )
 
 type Controller interface {

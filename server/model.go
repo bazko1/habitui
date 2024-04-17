@@ -5,8 +5,8 @@ import (
 )
 
 type UserModel struct {
-	Username  string
-	Email     string
-	Passwordd string `json:"-"`
-	habits    habit.TaskList
+	Username string
+	Email    string
+	Token    string
+	habits   habit.TaskList
 }

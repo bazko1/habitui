@@ -1,6 +1,8 @@
 package server
 
 import (
+	"fmt"
+
 	"github.com/bazko1/habitui/habit"
 )
 
@@ -13,18 +15,22 @@ func NewInMemoryController() InMemoryController {
 }
 
 func (controller *InMemoryController) CreateNewuser(username,
-	email,
-	password string,
+	email string,
 ) (bool, error) {
+	if username == "" {
+		return false, fmt.Errorf("%w: username can not be empty", ErrInccorectInput)
+	}
+
 	if _, exists := controller.users[username]; exists {
 		return false, ErrUsernameExists
 	}
 
 	controller.users[username] = UserModel{
-		Username:  username,
-		Email:     email,
-		Passwordd: password,
-		habits:    make(habit.TaskList, 0),
+		Username: username,
+		Email:    email,
+		// TODO: Generate token
+		Token:  "token",
+		habits: make(habit.TaskList, 0),
 	}
 
 	return true, nil
