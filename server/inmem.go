@@ -14,9 +14,9 @@ func NewInMemoryController() InMemoryController {
 	return InMemoryController{users: make(map[string]UserModel)}
 }
 
-func (controller *InMemoryController) CreateNewuser(username,
-	email string,
-) (bool, error) {
+func (controller *InMemoryController) CreateNewUser(u UserModel) (bool, error) {
+	username := u.Username
+	email := u.Email
 	if username == "" {
 		return false, fmt.Errorf("%w: username can not be empty", ErrInccorectInput)
 	}
@@ -36,14 +36,22 @@ func (controller *InMemoryController) CreateNewuser(username,
 	return true, nil
 }
 
-func (controller *InMemoryController) UpdateUserHabits(username string,
-	habits habit.TaskList,
-) {
-	if user, exist := controller.users[username]; exist {
-		user.habits = habits
+func (controller *InMemoryController) UpdateUserHabits(user UserModel, habits habit.TaskList,
+) error {
+	if u, exist := controller.users[user.Username]; !exist || u.Token != user.Token {
+		return fmt.Errorf("%w: user with given name does not exist or incorrect token", ErrNonExistentUser)
 	}
+
+	u := controller.users[user.Username]
+	u.habits = habits
+	controller.users[user.Username] = u
+
+	return nil
 }
 
-func (controller InMemoryController) GetUserHabits(username string) habit.TaskList {
-	return controller.users[username].habits
+func (controller InMemoryController) GetUserHabits(user UserModel) (habit.TaskList, error) {
+	if u, exist := controller.users[user.Username]; !exist || u.Token != user.Token {
+		return habit.TaskList{}, fmt.Errorf("%w: user with given name does not exist or incorrect token", ErrNonExistentUser)
+	}
+	return controller.users[user.Username].habits, nil
 }
