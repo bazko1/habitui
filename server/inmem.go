@@ -14,15 +14,16 @@ func NewInMemoryController() InMemoryController {
 	return InMemoryController{users: make(map[string]UserModel)}
 }
 
-func (controller *InMemoryController) CreateNewUser(u UserModel) (bool, error) {
+func (controller *InMemoryController) CreateNewUser(u UserModel) (UserModel, error) {
 	username := u.Username
 	email := u.Email
+
 	if username == "" {
-		return false, fmt.Errorf("%w: username can not be empty", ErrInccorectInput)
+		return UserModel{}, fmt.Errorf("%w: username can not be empty", ErrInccorectInput)
 	}
 
 	if _, exists := controller.users[username]; exists {
-		return false, ErrUsernameExists
+		return UserModel{}, ErrUsernameExists
 	}
 
 	controller.users[username] = UserModel{
@@ -33,7 +34,7 @@ func (controller *InMemoryController) CreateNewUser(u UserModel) (bool, error) {
 		habits: make(habit.TaskList, 0),
 	}
 
-	return true, nil
+	return controller.users[username], nil
 }
 
 func (controller *InMemoryController) UpdateUserHabits(user UserModel, habits habit.TaskList,
