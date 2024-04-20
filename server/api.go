@@ -29,21 +29,17 @@ func getUserFromRequest(r *http.Request) (UserModel, error) {
 func createHandler(controller Controller) http.Handler {
 	handler := http.NewServeMux()
 
-	handler.HandleFunc("POST /user/create", handleUserCreate(controller))
-	handler.HandleFunc("GET /user/habits", handleUserHabits(controller))
+	handler.HandleFunc("POST /user/create", handlePostUserCreate(controller))
+	handler.HandleFunc("GET /user/habits", handleGetUserHabits(controller))
 
-	handler.HandleFunc("PUT /user/habits", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("updating user habits"))
-	})
+	handler.HandleFunc("PUT /user/habits", handlePutUserHabits(controller))
 
-	handler.HandleFunc("PUT /user/token", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("revoking user token"))
-	})
+	handler.HandleFunc("PUT /user/token", handlePutUserToken(controller))
 
 	return logRequestMiddleware(handler)
 }
 
-func handleUserCreate(controller Controller) http.HandlerFunc {
+func handlePostUserCreate(controller Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := getUserFromRequest(r)
 		if err != nil {
@@ -88,7 +84,79 @@ func handleUserCreate(controller Controller) http.HandlerFunc {
 	}
 }
 
-func handleUserHabits(controller Controller) http.HandlerFunc {
+func handleGetUserHabits(controller Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := getUserFromRequest(r)
+		if err != nil {
+			log.Printf("Error getting user from request: %v", err)
+			http.Error(w, "Failed to decode or missing data.", http.StatusInternalServerError)
+
+			return
+		}
+
+		habits, err := controller.GetUserHabits(user)
+		if errors.Is(err, ErrInccorectInput) {
+			http.Error(w, fmt.Sprintf("Incorrect input error: %v", err), http.StatusUnprocessableEntity)
+
+			return
+		}
+
+		if err != nil {
+			log.Printf("Getting user habits error: %v", err)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
+
+			return
+		}
+
+		bytes, err := json.Marshal(habits)
+		if err != nil {
+			log.Printf("error when marshaling user: %v", err)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
+
+			return
+		}
+
+		_, _ = w.Write(bytes)
+	}
+}
+
+func handlePutUserHabits(controller Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := getUserFromRequest(r)
+		if err != nil {
+			log.Printf("Error getting user from request: %v", err)
+			http.Error(w, "Failed to decode or missing data.", http.StatusInternalServerError)
+
+			return
+		}
+
+		habits, err := controller.GetUserHabits(user)
+		if errors.Is(err, ErrInccorectInput) {
+			http.Error(w, fmt.Sprintf("Incorrect input error: %v", err), http.StatusUnprocessableEntity)
+
+			return
+		}
+
+		if err != nil {
+			log.Printf("Getting user habits error: %v", err)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
+
+			return
+		}
+
+		bytes, err := json.Marshal(habits)
+		if err != nil {
+			log.Printf("error when marshaling user: %v", err)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
+
+			return
+		}
+
+		_, _ = w.Write(bytes)
+	}
+}
+
+func handlePutUserToken(controller Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := getUserFromRequest(r)
 		if err != nil {
