@@ -50,6 +50,11 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 		}
 
 		newUser, err := controller.CreateNewUser(user)
+		if errors.Is(err, ErrInccorectInput) {
+			http.Error(w, fmt.Sprintf("Incorrect input error: %v", err), http.StatusUnprocessableEntity)
+
+			return
+		}
 
 		if errors.Is(err, ErrUsernameExists) {
 			w.Write([]byte("{}"))
@@ -80,7 +85,7 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusCreated)
 	}
 }
 
@@ -95,8 +100,8 @@ func handleGetUserHabits(controller Controller) http.HandlerFunc {
 		}
 
 		habits, err := controller.GetUserHabits(user)
-		if errors.Is(err, ErrInccorectInput) {
-			http.Error(w, fmt.Sprintf("Incorrect input error: %v", err), http.StatusUnprocessableEntity)
+		if errors.Is(err, ErrNonExistentUser) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			return
 		}
@@ -116,6 +121,7 @@ func handleGetUserHabits(controller Controller) http.HandlerFunc {
 			return
 		}
 
+		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(bytes)
 	}
 }
@@ -130,35 +136,29 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		habits, err := controller.GetUserHabits(user)
-		if errors.Is(err, ErrInccorectInput) {
-			http.Error(w, fmt.Sprintf("Incorrect input error: %v", err), http.StatusUnprocessableEntity)
-
-			return
-		}
-
+		err = controller.UpdateUserHabits(user, user.habits)
+		// TODO handle errors authorization check
 		if err != nil {
-			log.Printf("Getting user habits error: %v", err)
+			log.Printf("Updating user habits error: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
 
 			return
 		}
 
-		bytes, err := json.Marshal(habits)
-		if err != nil {
-			log.Printf("error when marshaling user: %v", err)
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-
-			return
-		}
-
-		_, _ = w.Write(bytes)
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
 func handlePutUserToken(controller Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user, err := getUserFromRequest(r)
+
+		if errors.Is(err, ErrNonExistentUser) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
+			return
+		}
+
 		if err != nil {
 			log.Printf("Error getting user from request: %v", err)
 			http.Error(w, "Failed to decode or missing data.", http.StatusInternalServerError)
@@ -166,28 +166,11 @@ func handlePutUserToken(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		habits, err := controller.GetUserHabits(user)
-		if errors.Is(err, ErrInccorectInput) {
-			http.Error(w, fmt.Sprintf("Incorrect input error: %v", err), http.StatusUnprocessableEntity)
+		// TODO: Think about simple authentication schema
+		// possible controller method for setting token
+		// controller.CreateUserToken(user) or
+		// controller.SetUserToken(user)
 
-			return
-		}
-
-		if err != nil {
-			log.Printf("Getting user habits error: %v", err)
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-
-			return
-		}
-
-		bytes, err := json.Marshal(habits)
-		if err != nil {
-			log.Printf("error when marshaling user: %v", err)
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-
-			return
-		}
-
-		_, _ = w.Write(bytes)
+		_, _ = w.Write([]byte(user.Token))
 	}
 }
