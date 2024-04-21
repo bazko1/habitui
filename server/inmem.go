@@ -54,5 +54,6 @@ func (controller InMemoryController) GetUserHabits(user UserModel) (habit.TaskLi
 	if u, exist := controller.users[user.Username]; !exist || u.Token != user.Token {
 		return habit.TaskList{}, fmt.Errorf("%w: user with given name does not exist or incorrect token", ErrNonExistentUser)
 	}
+
 	return controller.users[user.Username].habits, nil
 }

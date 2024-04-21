@@ -20,7 +20,7 @@ func getUserFromRequest(r *http.Request) (UserModel, error) {
 	decoder := json.NewDecoder(r.Body)
 
 	if err := decoder.Decode(&user); err != nil {
-		return UserModel{}, fmt.Errorf("Error decoding user: %w", err)
+		return UserModel{}, fmt.Errorf("error decoding user: %w", err)
 	}
 
 	return user, nil
@@ -31,10 +31,11 @@ func createHandler(controller Controller) http.Handler {
 
 	handler.HandleFunc("POST /user/create", handlePostUserCreate(controller))
 	handler.HandleFunc("GET /user/habits", handleGetUserHabits(controller))
-
 	handler.HandleFunc("PUT /user/habits", handlePutUserHabits(controller))
 
-	handler.HandleFunc("PUT /user/token", handlePutUserToken(controller))
+	// TODO: for now use single one time token auth that cannot be revoked
+	// implement more sophisticated authentication later
+	// handler.HandleFunc("PUT /user/token", handlePutUserToken(controller))
 
 	return logRequestMiddleware(handler)
 }
@@ -57,7 +58,7 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 		}
 
 		if errors.Is(err, ErrUsernameExists) {
-			w.Write([]byte("{}"))
+			_, _ = w.Write([]byte("{}"))
 			w.WriteHeader(http.StatusNoContent)
 
 			return
@@ -137,7 +138,12 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 		}
 
 		err = controller.UpdateUserHabits(user, user.habits)
-		// TODO handle errors authorization check
+		if errors.Is(err, ErrNonExistentUser) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
+			return
+		}
+
 		if err != nil {
 			log.Printf("Updating user habits error: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
@@ -146,31 +152,5 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
-	}
-}
-
-func handlePutUserToken(controller Controller) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		user, err := getUserFromRequest(r)
-
-		if errors.Is(err, ErrNonExistentUser) {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-
-			return
-		}
-
-		if err != nil {
-			log.Printf("Error getting user from request: %v", err)
-			http.Error(w, "Failed to decode or missing data.", http.StatusInternalServerError)
-
-			return
-		}
-
-		// TODO: Think about simple authentication schema
-		// possible controller method for setting token
-		// controller.CreateUserToken(user) or
-		// controller.SetUserToken(user)
-
-		_, _ = w.Write([]byte(user.Token))
 	}
 }

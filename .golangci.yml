@@ -14,6 +14,8 @@ linters:
     - structcheck
     - musttag
     - varnamelen
+    - godox
+    - exhaustruct
 
 linters-settings:
   cyclop:
