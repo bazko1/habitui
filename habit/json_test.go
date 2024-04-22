@@ -23,7 +23,7 @@ func TestTaskJSONState(t *testing.T) { //nolint:funlen
 		dit.AddDay()
 
 		for i := range tasks {
-			tasks[i].MakeTaskCompleted()
+			tasks[i].MakeCompleted()
 		}
 	}
 

@@ -203,10 +203,10 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 			_, ok := model.selectedRow[model.cursorRow]
 			if ok {
 				delete(model.selectedRow, model.cursorRow)
-				model.tasks[model.cursorRow].MakeTaskUnCompleted()
+				model.tasks[model.cursorRow].MakeUnCompleted()
 			} else {
 				model.selectedRow[model.cursorRow] = struct{}{}
-				model.tasks[model.cursorRow].MakeTaskCompleted()
+				model.tasks[model.cursorRow].MakeCompleted()
 			}
 
 		case key.Matches(msg, model.keys.Add):

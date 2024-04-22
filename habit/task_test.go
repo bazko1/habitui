@@ -95,8 +95,8 @@ func TestTaskCompletionSingleDay(t *testing.T) {
 
 	task := habit.NewTask("test", "test description")
 
-	task.MakeTaskCompleted()
-	task.MakeTaskCompleted()
+	task.MakeCompleted()
+	task.MakeCompleted()
 
 	y, m, _ := time.Now().Date()
 	monthCompletions := task.MonthCompletionTime(y, m)
@@ -122,14 +122,14 @@ func TestTaskWithChangingDay(t *testing.T) {
 	task := habit.NewTaskWithCustomTime("hit the gym", "test description", dit.Now)
 
 	dit.AddDay()
-	task.MakeTaskCompleted()
+	task.MakeCompleted()
 
 	dit.AddDay()
-	task.MakeTaskCompleted()
+	task.MakeCompleted()
 
 	dit.AddDay()
 
-	task.MakeTaskCompleted()
+	task.MakeCompleted()
 
 	if compl := task.CurrentMonthCompletion(); compl != 3 {
 		t.Fatalf("Task completion is %d when it should be 3", compl)
@@ -162,7 +162,7 @@ func TestTaskWithChangingDay(t *testing.T) {
 		t.Fatalf("Task should be completed 0 times this week while it returned %d", task.CurrentStrike())
 	}
 
-	task.MakeTaskCompleted()
+	task.MakeCompleted()
 
 	if task.CurrentMonthCompletion() != 4 {
 		t.Fatalf("Task should be completed 4 times this month while it returned %d", task.CurrentStrike())
@@ -182,12 +182,12 @@ func TestTaskUnCompletion(t *testing.T) {
 
 	for range numCompletions - 1 {
 		dit.AddDay()
-		task.MakeTaskCompleted()
+		task.MakeCompleted()
 	}
 
 	notUnCompleted := dit.CurrentTime
 	dit.AddDay()
-	task.MakeTaskCompleted()
+	task.MakeCompleted()
 
 	if task.CurrentMonthCompletion() != numCompletions {
 		t.Fatalf("Task should be completed %d times this month while it returned %d", numCompletions, task.CurrentStrike())
@@ -197,7 +197,7 @@ func TestTaskUnCompletion(t *testing.T) {
 		t.Fatalf("Task CurrentMonthBestStrike should be %d times while it returned %d", numCompletions, strike)
 	}
 
-	task.MakeTaskUnCompleted()
+	task.MakeUnCompleted()
 
 	numCompletions--
 	if task.CurrentMonthCompletion() != numCompletions {
@@ -226,7 +226,7 @@ func TestCompletionChangingMonth(t *testing.T) {
 
 	// first check completions in March
 	for c := range 2 {
-		task.MakeTaskCompleted()
+		task.MakeCompleted()
 
 		if err := validateCompletion(task, c+1, c+1, c+1); err != nil {
 			t.Fatal(err.Error())
@@ -241,7 +241,7 @@ func TestCompletionChangingMonth(t *testing.T) {
 
 	// check completions in April
 	for c := range compl - 2 {
-		task.MakeTaskCompleted()
+		task.MakeCompleted()
 
 		if err := validateCompletion(task, c+1, c+1, c+3); err != nil {
 			t.Fatal(err.Error())
@@ -273,7 +273,7 @@ func TestCompletionChangingYear(t *testing.T) {
 	compl := 10
 
 	for range compl {
-		task.MakeTaskCompleted()
+		task.MakeCompleted()
 
 		startDate = startDate.AddDate(0, 0, 1)
 	}

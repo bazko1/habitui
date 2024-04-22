@@ -55,10 +55,10 @@ func (task *Task) LastTimeCompleted() time.Time {
 	return task.lastTimeCompleted
 }
 
-// MakeTaskCompleted updates all task tracking states with information about finishing task now.
+// MakeCompleted updates all task tracking states with information about finishing task now.
 // Date is added to completion history if it wasn't completed this day yet.
 // This method also updates statistics information such as day streak number.
-func (task *Task) MakeTaskCompleted() {
+func (task *Task) MakeCompleted() {
 	now := task.GetTime()
 
 	if task.WasCompletedToday() {
@@ -120,8 +120,8 @@ func (task *Task) MakeTaskCompleted() {
 	}
 }
 
-// MakeTaskUnCompleted makes reverts task completion for current day.
-func (task *Task) MakeTaskUnCompleted() {
+// MakeUnCompleted makes reverts task completion for current day.
+func (task *Task) MakeUnCompleted() {
 	if !task.WasCompletedToday() {
 		return
 	}
