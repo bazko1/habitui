@@ -58,7 +58,7 @@ func JSONSaveTasks(filename string, tasks TaskList) error {
 		exportableTasks = append(exportableTasks, t.ToJSONTask())
 	}
 
-	bytes, err := json.Marshal(exportableTasks)
+	bytes, err := json.MarshalIndent(exportableTasks, "", "  ")
 	if err != nil {
 		return fmt.Errorf("save json failed to marshall tasks(%v): %w", tasks, err)
 	}
