@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"time"
 
 	habitui "github.com/bazko1/habitui/habit"
-	"math/rand/v2"
 )
 
 func main() {
@@ -21,11 +21,11 @@ func main() {
 	for startDate.Before(time.Now().AddDate(0, 0, -2)) {
 		startDate = startDate.AddDate(0, 0, 1)
 
-		tasks[0].MakeTaskCompleted()
+		tasks[0].MakeCompleted()
 
 		for i := 1; i < len(tasks); i++ {
 			if rand.Int()%2 != 0 {
-				tasks[i].MakeTaskCompleted()
+				tasks[i].MakeCompleted()
 			}
 		}
 	}
