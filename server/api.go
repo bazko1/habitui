@@ -8,6 +8,8 @@ import (
 	"net/http"
 )
 
+const missingUserInputErrMessage = "Failed to decode user or missing data."
+
 func logRequestMiddleware(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("method: %s, path: %s", r.Method, r.URL.Path)
@@ -45,7 +47,7 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 		user, err := getUserFromRequest(r)
 		if err != nil {
 			log.Printf("Error getting user from request: %v", err)
-			http.Error(w, "Failed to decode or missing data.", http.StatusInternalServerError)
+			http.Error(w, missingUserInputErrMessage, http.StatusInternalServerError)
 
 			return
 		}
@@ -95,7 +97,7 @@ func handleGetUserHabits(controller Controller) http.HandlerFunc {
 		user, err := getUserFromRequest(r)
 		if err != nil {
 			log.Printf("Error getting user from request: %v", err)
-			http.Error(w, "Failed to decode or missing data.", http.StatusInternalServerError)
+			http.Error(w, missingUserInputErrMessage, http.StatusInternalServerError)
 
 			return
 		}
@@ -132,7 +134,7 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 		user, err := getUserFromRequest(r)
 		if err != nil {
 			log.Printf("Error getting user from request: %v", err)
-			http.Error(w, "Failed to decode or missing data.", http.StatusInternalServerError)
+			http.Error(w, missingUserInputErrMessage, http.StatusInternalServerError)
 
 			return
 		}
