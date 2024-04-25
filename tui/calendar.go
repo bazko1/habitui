@@ -1,4 +1,4 @@
-package main
+package tui
 
 import (
 	"fmt"
@@ -10,11 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss/table"
 )
 
-func getDaysInMonth(t time.Time) int {
-	return 32 - time.Date(t.Year(), t.Month(), 32, 0, 0, 0, 0, time.UTC).Day()
-}
-
-func main() {
+func renderCalendar() {
 	now := time.Now()
 	days := getDaysInMonth(time.Now())
 	firstDay := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
