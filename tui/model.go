@@ -352,6 +352,7 @@ func (model Model) View() string { //nolint:funlen
 		dateToday := model.tasks[0].GetTime()
 		selectedTask := model.tasks[selectedID]
 		numOfStats := 4
+
 		lowerPanel := lipgloss.JoinHorizontal(
 			1,
 			createLowerPanelTextBox(fmt.Sprintf("Strike:\n\tCurrent: %d\n\tBest monthly: %d\n\tBest yearly: %d",
@@ -368,6 +369,10 @@ func (model Model) View() string { //nolint:funlen
 		)
 
 		view = lipgloss.JoinVertical(1, view, lowerPanel)
+
+		// FIXME: Need to rice minimal height of panels so that they are no smaller than calendar or
+		// make calendar size based on current windows size.
+		view = lipgloss.JoinHorizontal(lipgloss.Center, view, RenderCalendar(selectedTask))
 	}
 
 	helpView := model.help.View(model.keys)
@@ -377,7 +382,9 @@ func (model Model) View() string { //nolint:funlen
 }
 
 func getDaysInMonth(t time.Time) int {
-	return 32 - time.Date(t.Year(), t.Month(), 32, 0, 0, 0, 0, time.UTC).Day()
+	const overMaxDaysInMonth = 32
+
+	return overMaxDaysInMonth - time.Date(t.Year(), t.Month(), 32, 0, 0, 0, 0, time.UTC).Day()
 }
 
 func getDaysInYear(t time.Time) int {
