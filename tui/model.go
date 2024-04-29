@@ -376,6 +376,9 @@ func (model Model) View() string { //nolint:funlen
 	}
 
 	helpView := model.help.View(model.keys)
+	view = lipgloss.JoinVertical(lipgloss.Left,
+		fmt.Sprintf("%d %s %d", time.Now().Day(), time.Now().Month().String(), time.Now().Year()),
+		view)
 	view += "\n" + helpView
 
 	return view
