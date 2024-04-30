@@ -19,14 +19,22 @@ const (
 	calendarFields = calendarRows * calendarCols
 )
 
-// renderCalendar
-// TODO: this will render calendar that will be added as separate panel to tui
-// calendar will be different for each task as completed days will be colored in green.
-func RenderCalendar(task habit.Task) string {
+// RenderCalendar creates calendar string based on task that
+// shows days in a month when task was completed.
+func RenderCalendar(task habit.Task) string { //nolint:funlen // lets keep it as long blob for now
 	now := task.GetTime()
 	monthDays := getDaysInMonth(time.Now())
 	firstDay := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	firstDayWeekday := int(firstDay.Weekday())
+
+	// count Monday as first day instead of Sunday
+	if firstDayWeekday == 0 {
+		firstDayWeekday = 7
+	}
+	// Mon is 1, Tue 2, ..., Sun 7 if we have Monday
+	// no days are filled before 1st day of month.
+	firstDayWeekday--
+
 	daysSlice := make([]string, 0, calendarFields)
 
 	completedDays := [][2]int{}
@@ -83,7 +91,7 @@ func RenderCalendar(task habit.Task) string {
 			return baseStyle
 		})
 
-	dayNames := labelStyle.Render(strings.Join([]string{" Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}, "  "))
+	dayNames := labelStyle.Render(strings.Join([]string{" Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}, "  "))
 	calendar := lipgloss.JoinVertical(lipgloss.Left, dayNames, t.Render()) + "\n"
 
 	return calendar

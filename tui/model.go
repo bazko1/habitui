@@ -375,10 +375,14 @@ func (model Model) View() string { //nolint:funlen
 		view = lipgloss.JoinHorizontal(lipgloss.Center, view, RenderCalendar(selectedTask))
 	}
 
-	helpView := model.help.View(model.keys)
+	labelStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("241"))
+	// FIXME: This is not aligned with calendar days labels and look not aesthetic
+	// will need to play with joining so that it is aligned.
 	view = lipgloss.JoinVertical(lipgloss.Left,
-		fmt.Sprintf("%d %s %d", time.Now().Day(), time.Now().Month().String(), time.Now().Year()),
+		labelStyle.Render(fmt.Sprintf("%d %s %d", time.Now().Day(), time.Now().Month().String(), time.Now().Year())),
 		view)
+
+	helpView := model.help.View(model.keys)
 	view += "\n" + helpView
 
 	return view
