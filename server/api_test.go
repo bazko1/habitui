@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -49,5 +50,13 @@ func TestCreateUser(t *testing.T) {
 	}
 	if code := resp.StatusCode; code != 200 {
 		t.Fatalf("Incorrect status code has '%d' but expected 200", code)
+	}
+
+	user := UserModel{}
+	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+		t.Fatalf("Error decoding user body: %v", err)
+	}
+	if user.Token == "" {
+		t.Fatal("User has no token set")
 	}
 }
