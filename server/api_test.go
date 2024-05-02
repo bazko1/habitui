@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -48,8 +49,8 @@ func TestCreateUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error during post call user creation: %v", err)
 	}
-	if code := resp.StatusCode; code != 200 {
-		t.Fatalf("Incorrect status code has '%d' but expected 200", code)
+	if code := resp.StatusCode; code != 201 {
+		t.Fatalf("Incorrect status code has '%d' but expected 201", code)
 	}
 
 	user := UserModel{}
@@ -58,5 +59,19 @@ func TestCreateUser(t *testing.T) {
 	}
 	if user.Token == "" {
 		t.Fatal("User has no token set")
+	}
+
+	resp, err = http.Post(address+"/user/create", "application/x-www-form-urlencoded", strings.NewReader(`{"Username":"foo","Email":"bar"}`))
+	if err != nil {
+		t.Fatalf("Error during post call user recreation: %v", err)
+	}
+
+	if code := resp.StatusCode; code != http.StatusNoContent {
+		t.Fatalf("Incorrect status code has '%d' but expected %d", code, http.StatusNoContent)
+	}
+
+	bytes, _ := io.ReadAll(resp.Body)
+	if data := string(bytes); data != "" {
+		t.Fatalf("Expected empty body got %s", data)
 	}
 }

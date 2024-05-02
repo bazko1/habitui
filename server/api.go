@@ -60,8 +60,8 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 		}
 
 		if errors.Is(err, ErrUsernameExists) {
-			_, _ = w.Write([]byte("{}"))
 			w.WriteHeader(http.StatusNoContent)
+			_, _ = w.Write([]byte("{}"))
 
 			return
 		}
@@ -81,6 +81,8 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 			return
 		}
 
+		w.WriteHeader(http.StatusCreated)
+
 		if _, err := w.Write(bytes); err != nil {
 			log.Printf("Failed to write bytes error: %v", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -88,7 +90,7 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		return
 	}
 }
 
