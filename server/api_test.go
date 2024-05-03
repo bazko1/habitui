@@ -75,3 +75,9 @@ func TestCreateUser(t *testing.T) {
 		t.Fatalf("Expected empty body got %s", data)
 	}
 }
+
+func TestUpdateUserTasks(t *testing.T) {
+	TestCreateUser(t)
+	// TODO: call post and get calls for setting/getting
+	// user tasks.
+}
