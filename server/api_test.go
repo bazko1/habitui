@@ -1,3 +1,4 @@
+// // nolint:forbidigo
 package server
 
 import (
@@ -20,6 +21,7 @@ func startServer(t *testing.T) net.Listener {
 
 	controller := NewInMemoryController()
 	serverServeError := make(chan error)
+
 	go func() {
 		defer close(serverServeError)
 		if err := http.Serve(ln, createHandler(&controller)); err != nil {
@@ -38,17 +40,16 @@ func startServer(t *testing.T) net.Listener {
 	return ln
 }
 
-func TestCreateUser(t *testing.T) {
-	t.Parallel()
+func createUser(t *testing.T, addr string) UserModel {
+	t.Helper()
 
-	ln := startServer(t)
-	defer ln.Close()
-	address := fmt.Sprintf("http://%s", ln.Addr().String())
-	fmt.Println("Server listening at: ", address)
-	resp, err := http.Post(address+"/user/create", "application/x-www-form-urlencoded", strings.NewReader(`{"Username":"foo","Email":"bar"}`))
+	resp, err := http.Post(addr+"/user/create",
+		"application/x-www-form-urlencoded",
+		strings.NewReader(`{"Username":"foo","Email":"bar"}`))
 	if err != nil {
 		t.Fatalf("Error during post call user creation: %v", err)
 	}
+
 	if code := resp.StatusCode; code != 201 {
 		t.Fatalf("Incorrect status code has '%d' but expected 201", code)
 	}
@@ -57,11 +58,26 @@ func TestCreateUser(t *testing.T) {
 	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
 		t.Fatalf("Error decoding user body: %v", err)
 	}
+
+	return user
+}
+
+func TestCreateUser(t *testing.T) {
+	t.Parallel()
+
+	ln := startServer(t)
+	defer ln.Close()
+	address := "http://" + ln.Addr().String()
+	fmt.Println("Server listening at: ", address)
+	user := createUser(t, address)
+
 	if user.Token == "" {
 		t.Fatal("User has no token set")
 	}
 
-	resp, err = http.Post(address+"/user/create", "application/x-www-form-urlencoded", strings.NewReader(`{"Username":"foo","Email":"bar"}`))
+	resp, err := http.Post(address+"/user/create",
+		"application/x-www-form-urlencoded",
+		strings.NewReader(`{"Username":"foo","Email":"bar"}`))
 	if err != nil {
 		t.Fatalf("Error during post call user recreation: %v", err)
 	}
@@ -77,7 +93,15 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestUpdateUserTasks(t *testing.T) {
-	TestCreateUser(t)
-	// TODO: call post and get calls for setting/getting
-	// user tasks.
+	t.Parallel()
+	ln := startServer(t)
+
+	defer ln.Close()
+	address := "http://" + ln.Addr().String()
+	fmt.Println("Server listening at: ", address)
+	_ = createUser(t, address+"/user/habits")
+	_, err := http.Get(address)
+	if err != nil {
+		t.Fatalf("Error during get call for user habits: %v", err)
+	}
 }
