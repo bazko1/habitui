@@ -8,5 +8,5 @@ type UserModel struct {
 	Username string
 	Email    string
 	Token    string
-	habits   habit.TaskList
+	Habits   habit.TaskList
 }

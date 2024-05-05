@@ -133,6 +133,10 @@ func handleGetUserHabits(controller Controller) http.HandlerFunc {
 
 func handlePutUserHabits(controller Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO: this does not work properly need to refactor so that
+		// this works with json from habit module otherwise the
+		// tasks will not be properly filled with data and will be
+		// just nil initialized
 		user, err := getUserFromRequest(r)
 		if err != nil {
 			log.Printf("Error getting user from request: %v", err)
@@ -141,7 +145,7 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		err = controller.UpdateUserHabits(user, user.habits)
+		err = controller.UpdateUserHabits(user, user.Habits)
 		if errors.Is(err, ErrNonExistentUser) {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 

@@ -13,9 +13,9 @@ func TestTaskJSONState(t *testing.T) { //nolint:funlen
 
 	dit := dayIncreasingTime{time.Date(2023, time.October, 3, 15, 33, 0, 0, time.UTC)}
 	tasks := habit.TaskList{
-		habit.NewTaskWithCustomTime("go for a walk", "walkin and dreamin...", dit.Now),
-		habit.NewTaskWithCustomTime("strength training", "gym or home calisthenics training", dit.Now),
-		habit.NewTaskWithCustomTime("english lesson", "mobile app lesson", dit.Now),
+		habit.WithCustomTime("go for a walk", "walkin and dreamin...", dit.Now),
+		habit.WithCustomTime("strength training", "gym or home calisthenics training", dit.Now),
+		habit.WithCustomTime("english lesson", "mobile app lesson", dit.Now),
 	}
 	inARowCompl := 4
 

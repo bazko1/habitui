@@ -31,7 +31,7 @@ func (controller *InMemoryController) CreateNewUser(u UserModel) (UserModel, err
 		Email:    email,
 		// TODO: Generate token
 		Token:  "token",
-		habits: make(habit.TaskList, 0),
+		Habits: make(habit.TaskList, 0),
 	}
 
 	return controller.users[username], nil
@@ -44,7 +44,7 @@ func (controller *InMemoryController) UpdateUserHabits(user UserModel, habits ha
 	}
 
 	u := controller.users[user.Username]
-	u.habits = habits
+	u.Habits = habits
 	controller.users[user.Username] = u
 
 	return nil
@@ -55,5 +55,5 @@ func (controller InMemoryController) GetUserHabits(user UserModel) (habit.TaskLi
 		return habit.TaskList{}, fmt.Errorf("%w: user with given name does not exist or incorrect token", ErrNonExistentUser)
 	}
 
-	return controller.users[user.Username].habits, nil
+	return controller.users[user.Username].Habits, nil
 }

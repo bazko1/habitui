@@ -119,7 +119,7 @@ func TestTaskWithChangingDay(t *testing.T) {
 
 	// new year new me resolution
 	dit := dayIncreasingTime{time.Date(2000, time.January, 1, 12, 0, 0, 0, time.UTC)}
-	task := habit.NewTaskWithCustomTime("hit the gym", "test description", dit.Now)
+	task := habit.WithCustomTime("hit the gym", "test description", dit.Now)
 
 	dit.AddDay()
 	task.MakeCompleted()
@@ -177,7 +177,7 @@ func TestTaskUnCompletion(t *testing.T) {
 	t.Parallel()
 
 	dit := dayIncreasingTime{time.Date(2023, time.October, 3, 15, 33, 0, 0, time.UTC)}
-	task := habit.NewTaskWithCustomTime("hit the gym", "test description", dit.Now)
+	task := habit.WithCustomTime("hit the gym", "test description", dit.Now)
 	numCompletions := 6
 
 	for range numCompletions - 1 {
@@ -220,7 +220,7 @@ func TestCompletionChangingMonth(t *testing.T) {
 	now := func() time.Time {
 		return startDate
 	}
-	task := habit.NewTaskWithCustomTime("work on habittui", "daily app grind", now)
+	task := habit.WithCustomTime("work on habittui", "daily app grind", now)
 
 	compl := 9
 
@@ -269,7 +269,7 @@ func TestCompletionChangingYear(t *testing.T) {
 	now := func() time.Time {
 		return startDate
 	}
-	task := habit.NewTaskWithCustomTime("work on habittui", "daily app grind", now)
+	task := habit.WithCustomTime("work on habittui", "daily app grind", now)
 	compl := 10
 
 	for range compl {

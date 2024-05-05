@@ -27,11 +27,11 @@ type Task struct {
 
 // NewTask creates new task based on name and description with default get time function set to time.Now.
 func NewTask(name, description string) Task {
-	return NewTaskWithCustomTime(name, description, time.Now)
+	return WithCustomTime(name, description, time.Now)
 }
 
-// NewTaskWithCustomTime constructs Task based on given name, description and time returning function.
-func NewTaskWithCustomTime(name, description string, getTime func() time.Time) Task {
+// WithCustomTime constructs Task based on given name, description and time returning function.
+func WithCustomTime(name, description string, getTime func() time.Time) Task {
 	if getTime == nil {
 		getTime = time.Now
 	}
