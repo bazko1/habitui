@@ -299,6 +299,7 @@ func (model Model) View() string { //nolint:funlen
 	selectedID := 0
 	descriptionSelected := false
 	height := 1
+	minHeight := 3
 
 	habits.WriteString("Habits:\n")
 
@@ -345,7 +346,11 @@ func (model Model) View() string { //nolint:funlen
 		description = "Add new task and start forming habit."
 	}
 
-	view += lipgloss.JoinHorizontal(1, createUpperTextPanelBox(strings.TrimSuffix(habits.String(), "\n"), height),
+	if height < minHeight {
+		height = minHeight
+	}
+
+	view += lipgloss.JoinHorizontal(lipgloss.Right, createUpperTextPanelBox(strings.TrimSuffix(habits.String(), "\n"), height),
 		createDescriptionBox(description, height, descriptionSelected))
 
 	if len(model.tasks) != 0 {
