@@ -154,14 +154,19 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 				model.editEnabled = false
 
 				if model.cursorCol == 0 {
-					model.tasks[model.cursorRow].Name = model.editInput.Value()
+					if val := model.editInput.Value(); val != "" {
+						model.tasks[model.cursorRow].Name = val
+					}
+
 					if model.addingNewTask {
 						model.editEnabled = true
 						model.cursorCol = 1
 						model.addingNewTask = false
 					}
 				} else {
-					model.tasks[model.cursorRow].Description = model.editInput.Value()
+					if val := model.editInput.Value(); val != "" {
+						model.tasks[model.cursorRow].Description = val
+					}
 					model.cursorCol = 0
 					model.editInput.Blur()
 				}
@@ -350,7 +355,8 @@ func (model Model) View() string { //nolint:funlen
 		height = minHeight
 	}
 
-	view += lipgloss.JoinHorizontal(lipgloss.Right, createUpperTextPanelBox(strings.TrimSuffix(habits.String(), "\n"), height),
+	view += lipgloss.JoinHorizontal(lipgloss.Right,
+		createUpperTextPanelBox(strings.TrimSuffix(habits.String(), "\n"), height),
 		createDescriptionBox(description, height, descriptionSelected))
 
 	if len(model.tasks) != 0 {
