@@ -6,15 +6,29 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 const missingUserInputErrMessage = "Failed to decode user or missing data."
+
+var ErrBadAuthorizationHeader = errors.New("bad authorization header")
 
 func logRequestMiddleware(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("method: %s, path: %s", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	}
+}
+
+func getBearerToken(r *http.Request) (string, error) {
+	reqToken := r.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer")
+
+	if len(splitToken) != 2 {
+		return "", ErrBadAuthorizationHeader
+	}
+
+	return strings.TrimSpace(splitToken[1]), nil
 }
 
 func getUserFromRequest(r *http.Request) (UserModel, error) {
@@ -31,6 +45,9 @@ func getUserFromRequest(r *http.Request) (UserModel, error) {
 func createHandler(controller Controller) http.Handler {
 	handler := http.NewServeMux()
 
+	// TODO: create login method that takes username and password and returns
+	// valid JWT
+	//handler.HandleFunc("POST /user/login", handlePostUserCreate(controller))
 	handler.HandleFunc("POST /user/create", handlePostUserCreate(controller))
 	handler.HandleFunc("GET /user/habits", handleGetUserHabits(controller))
 	handler.HandleFunc("PUT /user/habits", handlePutUserHabits(controller))
@@ -44,6 +61,8 @@ func createHandler(controller Controller) http.Handler {
 
 func handlePostUserCreate(controller Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO this should get username, email, password
+		// and create new user and create jwt token
 		user, err := getUserFromRequest(r)
 		if err != nil {
 			log.Printf("Error getting user from request: %v", err)
@@ -89,13 +108,14 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 
 			return
 		}
-
-		return
 	}
 }
 
 func handleGetUserHabits(controller Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO: create JWT token validation
+		// token, err := getBearerToken(r)
+
 		user, err := getUserFromRequest(r)
 		if err != nil {
 			log.Printf("Error getting user from request: %v", err)
