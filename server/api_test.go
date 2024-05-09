@@ -85,7 +85,7 @@ func TestCreateUser(t *testing.T) {
 	fmt.Println("Server listening at: ", address)
 	user := createUser(t, address)
 
-	if user.Token == "" {
+	if user.Password == "" {
 		t.Fatal("User has no token set")
 	}
 

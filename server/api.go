@@ -45,10 +45,8 @@ func getUserFromRequest(r *http.Request) (UserModel, error) {
 func createHandler(controller Controller) http.Handler {
 	handler := http.NewServeMux()
 
-	// TODO: create login method that takes username and password and returns
-	// valid JWT
-	//handler.HandleFunc("POST /user/login", handlePostUserCreate(controller))
 	handler.HandleFunc("POST /user/create", handlePostUserCreate(controller))
+	handler.HandleFunc("POST /user/login", handlePostUserLogin(controller))
 	handler.HandleFunc("GET /user/habits", handleGetUserHabits(controller))
 	handler.HandleFunc("PUT /user/habits", handlePutUserHabits(controller))
 
@@ -125,7 +123,7 @@ func handleGetUserHabits(controller Controller) http.HandlerFunc {
 		}
 
 		habits, err := controller.GetUserHabits(user)
-		if errors.Is(err, ErrNonExistentUser) {
+		if errors.Is(err, ErrNonExistentUserOrPassword) {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			return
@@ -166,7 +164,7 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 		}
 
 		err = controller.UpdateUserHabits(user, user.Habits)
-		if errors.Is(err, ErrNonExistentUser) {
+		if errors.Is(err, ErrNonExistentUserOrPassword) {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			return
@@ -180,5 +178,21 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+func handlePostUserLogin(controller Controller) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, err := getUserFromRequest(r)
+		if err != nil {
+			log.Printf("Error getting user from request: %v", err)
+			http.Error(w, missingUserInputErrMessage, http.StatusInternalServerError)
+
+			return
+		}
+
+		if !controller.IsValid(user) {
+			http.Error(w, ErrNonExistentUserOrPassword.Error(), http.StatusUnauthorized)
+		}
 	}
 }

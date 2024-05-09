@@ -7,6 +7,6 @@ import (
 type UserModel struct {
 	Username string
 	Email    string
-	Token    string
+	Password    string
 	Habits   habit.TaskList
 }

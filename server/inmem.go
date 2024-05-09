@@ -29,9 +29,8 @@ func (controller *InMemoryController) CreateNewUser(u UserModel) (UserModel, err
 	controller.users[username] = UserModel{
 		Username: username,
 		Email:    email,
-		// TODO: Generate token
-		Token:  "token",
-		Habits: make(habit.TaskList, 0),
+		Password: u.Password,
+		Habits:   make(habit.TaskList, 0),
 	}
 
 	return controller.users[username], nil
@@ -39,8 +38,8 @@ func (controller *InMemoryController) CreateNewUser(u UserModel) (UserModel, err
 
 func (controller *InMemoryController) UpdateUserHabits(user UserModel, habits habit.TaskList,
 ) error {
-	if u, exist := controller.users[user.Username]; !exist || u.Token != user.Token {
-		return fmt.Errorf("%w: user with given name does not exist or incorrect token", ErrNonExistentUser)
+	if controller.IsValid(user) {
+		return ErrNonExistentUserOrPassword
 	}
 
 	u := controller.users[user.Username]
@@ -51,9 +50,14 @@ func (controller *InMemoryController) UpdateUserHabits(user UserModel, habits ha
 }
 
 func (controller InMemoryController) GetUserHabits(user UserModel) (habit.TaskList, error) {
-	if u, exist := controller.users[user.Username]; !exist || u.Token != user.Token {
-		return habit.TaskList{}, fmt.Errorf("%w: user with given name does not exist or incorrect token", ErrNonExistentUser)
+	if controller.IsValid(user) {
+		return habit.TaskList{}, ErrNonExistentUserOrPassword
 	}
 
 	return controller.users[user.Username].Habits, nil
+}
+
+func (controller InMemoryController) IsValid(user UserModel) bool {
+	u, exist := controller.users[user.Username]
+	return !exist || u.Password != user.Password
 }
