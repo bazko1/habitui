@@ -41,13 +41,14 @@ Task and their changes are saved in json file by default its `.habitui.json`.
 App dev in progress.
 
 ## Installation
-The cmd will be changed so that it looks / creates configuration in
-standard location like user `$HOME`.<br>
-For now one needs to be directory aware when running.<br>
 To install `habitui` binary in your GOPATH:
 ```
 go install github.com/bazko1/habitui/cmd/habitui@latest
 ```
+
+## Usage 
+Run `habitui`. <br>
+This lets you create new habits. If you do not provide `-data` flag data will be saved to `$HOME/.habitui.json`
 
 ## How it looks:
 ![](demo.png "Main window")

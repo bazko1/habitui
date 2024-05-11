@@ -1,4 +1,4 @@
-//nolint:forbidigo //prints for client are not debug statements
+//nolint:forbidigo //prints for command line client are not debug statements
 package main
 
 import (
@@ -14,16 +14,48 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+const defaultFile string = ".habitui.json"
+
+// getIOFiles returns filenames for reading and writing habits data based on
+// tasksFile provided by user and files found in system.
+// If not tasksFile is provided there is check for .habitui.json
+// firstly in $(pwd) equivalent and then at $HOME.
+// If no file is found at pwd or home location then
+// new file will be written to user home.
+func getIOFiles(tasksFile string) (string, string) {
+	if tasksFile != "" {
+		return tasksFile, tasksFile
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return defaultFile, defaultFile
+	}
+
+	if _, err := os.Stat(defaultFile); err == nil {
+		return defaultFile, defaultFile
+	}
+
+	homef := home + "/" + defaultFile
+	if _, err := os.Stat(homef); err == nil {
+		return homef, homef
+	}
+
+	return "", homef
+}
+
 func main() {
-	tasksFile := flag.String("data", ".habitui.json", "a name of for loading/saving tasks data")
+	tasksFile := flag.String("data", "", "file name for loading/saving tasks data")
 	disableDebug := flag.Bool("no-debug", false, "do not log debug data to file")
 	flag.Parse()
 
 	var tasks habit.TaskList
 
-	file, err := os.ReadFile(*tasksFile)
+	inputFile, outputFile := getIOFiles(*tasksFile)
+	file, err := os.ReadFile(inputFile)
+
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		fmt.Printf("failed to open tasks file '%s': %v\n", *tasksFile, err)
+		fmt.Printf("failed to open tasks file '%s': %v\n", inputFile, err)
 		os.Exit(1)
 	}
 
@@ -60,7 +92,7 @@ func main() {
 	model, _ = out.(tui.Model)
 
 	defer func() {
-		err := habit.JSONSaveTasks(*tasksFile, model.Tasks())
+		err := habit.JSONSaveTasks(outputFile, model.Tasks())
 		if err != nil {
 			logger.Printf("failed to save tasks: %v", err)
 			os.Exit(1)
