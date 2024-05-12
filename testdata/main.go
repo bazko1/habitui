@@ -14,8 +14,8 @@ func main() {
 		return startDate
 	}
 	tasks := habitui.TaskList{
-		habitui.NewTaskWithCustomTime("work on habittui", "daily app grind", now),
-		habitui.NewTaskWithCustomTime("go for a walk", "walking is relaxing and healthy activity", now),
+		habitui.WithCustomTime("work on habittui", "daily app grind", now),
+		habitui.WithCustomTime("go for a walk", "walking is relaxing and healthy activity", now),
 	}
 
 	for startDate.Before(time.Now().AddDate(0, 0, -2)) {
