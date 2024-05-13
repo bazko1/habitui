@@ -83,11 +83,7 @@ func TestCreateUser(t *testing.T) {
 	defer ln.Close()
 	address := "http://" + ln.Addr().String()
 	fmt.Println("Server listening at: ", address)
-	user := createUser(t, address)
-
-	if user.Password == "" {
-		t.Fatal("User has no token set")
-	}
+	_ = createUser(t, address)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

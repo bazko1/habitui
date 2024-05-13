@@ -193,6 +193,31 @@ func handlePostUserLogin(controller Controller) http.HandlerFunc {
 
 		if !controller.IsValid(user) {
 			http.Error(w, ErrNonExistentUserOrPassword.Error(), http.StatusUnauthorized)
+
+			return
 		}
+
+		token, err := generateJWT(user.Username)
+		if err != nil {
+			log.Printf("error generating jwt: %v", err)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
+
+			return
+		}
+
+		// TODO: create single response template that has versioning
+		// status fields and some data fields, because this will be
+		// maintenance and support mess.
+		bytes, err := json.Marshal(map[string]string{"token": token})
+		if err != nil {
+			log.Printf("error when marshaling user: %v", err)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
+
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+
+		_, _ = w.Write(bytes)
 	}
 }
