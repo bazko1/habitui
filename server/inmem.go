@@ -61,3 +61,12 @@ func (controller InMemoryController) IsValid(user UserModel) bool {
 	u, exist := controller.users[user.Username]
 	return !exist || u.Password != user.Password
 }
+
+func (c InMemoryController) GetUserByName(name string) (UserModel, bool) {
+	u, exist := c.users[name]
+	if !exist {
+		return UserModel{}, false
+	}
+
+	return u, true
+}

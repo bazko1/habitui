@@ -20,15 +20,21 @@ func logRequestMiddleware(next http.Handler) http.HandlerFunc {
 	}
 }
 
-func getBearerToken(r *http.Request) (string, error) {
+func getBearerToken(r *http.Request) (map[string]any, error) {
 	reqToken := r.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer")
 
 	if len(splitToken) != 2 {
-		return "", ErrBadAuthorizationHeader
+		return map[string]any{}, ErrBadAuthorizationHeader
 	}
 
-	return strings.TrimSpace(splitToken[1]), nil
+	s := strings.TrimSpace(splitToken[1])
+	claims, err := parseAndValidateJWT(s)
+	if err != nil {
+		return map[string]any{}, fmt.Errorf("error getting bearer token: %w", err)
+	}
+
+	return claims, err
 }
 
 func getUserFromRequest(r *http.Request) (UserModel, error) {
@@ -155,10 +161,17 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 		// this works with json from habit module otherwise the
 		// tasks will not be properly filled with data and will be
 		// just nil initialized
-		user, err := getUserFromRequest(r)
+		claims, err := getBearerToken(r)
 		if err != nil {
-			log.Printf("Error getting user from request: %v", err)
-			http.Error(w, missingUserInputErrMessage, http.StatusInternalServerError)
+			log.Printf("err when getting bearer token: %v", err)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
+			return
+		}
+
+		user, ok := controller.GetUserByName(claims["username"].(string))
+		if !ok {
+			http.Error(w, "User does not exist", http.StatusNotFound)
 
 			return
 		}
@@ -205,10 +218,7 @@ func handlePostUserLogin(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		// TODO: create single response template that has versioning
-		// status fields and some data fields, because this will be
-		// maintenance and support mess.
-		bytes, err := json.Marshal(map[string]string{"token": token})
+		bytes, err := json.Marshal(token)
 		if err != nil {
 			log.Printf("error when marshaling user: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -8,11 +9,14 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var secretKey = []byte(os.Getenv("JWT_SECRET_KEY"))
+var (
+	secretKey          = []byte(os.Getenv("JWT_SECRET_KEY"))
+	ErrInvalidJwtToken = errors.New("invalid jwt token")
+)
 
 const jwtTokenDuration = 10 * time.Minute
 
-func generateJWT(username string) (string, error) {
+func generateJWT(username string) (map[string]any, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username":   username,
 		"exp":        time.Now().Add(jwtTokenDuration),
@@ -21,13 +25,17 @@ func generateJWT(username string) (string, error) {
 
 	tokenString, err := token.SignedString(secretKey)
 	if err != nil {
-		return "", fmt.Errorf("error generating jwt token: %w", err)
+		return map[string]any{}, fmt.Errorf("error generating jwt token: %w", err)
 	}
 
-	return tokenString, nil
+	return map[string]any{
+		"access_token": tokenString,
+		"token_type":   "Bearer",
+		"expires_in":   jwtTokenDuration,
+	}, nil
 }
 
-func parseJWT(tokenString string) (jwt.Token, error) {
+func parseAndValidateJWT(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -37,8 +45,12 @@ func parseJWT(tokenString string) (jwt.Token, error) {
 		return secretKey, nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil {
-		return jwt.Token{}, fmt.Errorf("error parsing toknenString during validation: %w", err)
+		return jwt.MapClaims{}, fmt.Errorf("error parsing toknenString during validation: %w", err)
 	}
 
-	return *token, nil
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	} else {
+		return jwt.MapClaims{}, ErrInvalidJwtToken
+	}
 }

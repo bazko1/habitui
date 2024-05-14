@@ -247,10 +247,15 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 }
 
 func formatSelectedText(text string) string {
+	// TODO: Check text length with box width
+	// with and if it is too long either
+	// make splitting that do not break the
+	// other sections or figure out way of
+	// highlighting just section box.
 	style := lipgloss.NewStyle().
 		Bold(true).
 		Faint(true).
-		Reverse(true)
+		Reverse(true).MaxWidth(sectionBoxWidth)
 
 	return style.Render(text)
 }
