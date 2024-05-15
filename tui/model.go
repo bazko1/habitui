@@ -247,15 +247,10 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 }
 
 func formatSelectedText(text string) string {
-	// TODO: Check text length with box width
-	// with and if it is too long either
-	// make splitting that do not break the
-	// other sections or figure out way of
-	// highlighting just section box.
 	style := lipgloss.NewStyle().
 		Bold(true).
 		Faint(true).
-		Reverse(true).MaxWidth(sectionBoxWidth)
+		Reverse(true)
 
 	return style.Render(text)
 }
@@ -314,8 +309,9 @@ func (model Model) View() string { //nolint:funlen
 	habits.WriteString("Habits:\n")
 
 	for taskID, task := range model.tasks {
-		height++
 		taskName := task.Name
+		height += (len(taskName)/sectionBoxWidth + 2)
+		taskSelected := false
 
 		if model.cursorRow == taskID {
 			selectedID = taskID
@@ -326,7 +322,7 @@ func (model Model) View() string { //nolint:funlen
 					model.editInput.Placeholder = taskName
 					taskName = model.editInput.View()
 				} else {
-					taskName = formatSelectedText(taskName)
+					taskSelected = true
 				}
 			}
 		}
@@ -336,7 +332,18 @@ func (model Model) View() string { //nolint:funlen
 			completed = "x"
 		}
 
-		habits.WriteString(fmt.Sprintf("[%s] %s\n", completed, taskName))
+		if len(taskName)+4 >= sectionBoxWidth {
+			taskName = wrap.String(taskName, sectionBoxWidth) // force-wrap long strings}
+			taskName = strings.TrimLeft(taskName, "\n")
+		}
+
+		if taskSelected {
+			taskName = formatSelectedText(taskName)
+		}
+
+		text := fmt.Sprintf("[%s] %s", completed, taskName)
+
+		habits.WriteString(lipgloss.NewStyle().Render(text) + "\n")
 	}
 
 	if model.cursorCol == 1 {
