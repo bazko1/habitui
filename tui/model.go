@@ -333,8 +333,8 @@ func (model Model) View() string { //nolint:funlen
 		}
 
 		if len(taskName)+4 >= sectionBoxWidth {
-			taskName = wrap.String(taskName, sectionBoxWidth) // force-wrap long strings}
-			taskName = strings.TrimLeft(taskName, "\n")
+			//// nolint:gomnd // 4 is for the completion box plus space
+			taskName = wrap.String(taskName, sectionBoxWidth-4)
 		}
 
 		if taskSelected {
