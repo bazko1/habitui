@@ -22,6 +22,10 @@ func (controller *InMemoryController) CreateNewUser(u UserModel) (UserModel, err
 		return UserModel{}, fmt.Errorf("%w: username can not be empty", ErrInccorectInput)
 	}
 
+	if u.Password == "" {
+		return UserModel{}, fmt.Errorf("%w: password can not be empty", ErrInccorectInput)
+	}
+
 	if _, exists := controller.users[username]; exists {
 		return UserModel{}, ErrUsernameExists
 	}
@@ -59,7 +63,7 @@ func (controller InMemoryController) GetUserHabits(user UserModel) (habit.TaskLi
 
 func (controller InMemoryController) IsValid(user UserModel) bool {
 	u, exist := controller.users[user.Username]
-	return !exist || u.Password != user.Password
+	return exist && u.Password == user.Password
 }
 
 func (c InMemoryController) GetUserByName(name string) (UserModel, bool) {

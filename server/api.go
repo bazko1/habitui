@@ -24,11 +24,14 @@ func getBearerToken(r *http.Request) (map[string]any, error) {
 	reqToken := r.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer")
 
+	//// nolint:gomnd // if string has 'Bearer' keyword and token string
+	// result of split should have empty string and token.
 	if len(splitToken) != 2 {
 		return map[string]any{}, ErrBadAuthorizationHeader
 	}
 
 	s := strings.TrimSpace(splitToken[1])
+
 	claims, err := parseAndValidateJWT(s)
 	if err != nil {
 		return map[string]any{}, fmt.Errorf("error getting bearer token: %w", err)
@@ -75,7 +78,7 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		newUser, err := controller.CreateNewUser(user)
+		_, err = controller.CreateNewUser(user)
 		if errors.Is(err, ErrInccorectInput) {
 			http.Error(w, fmt.Sprintf("Incorrect input error: %v", err), http.StatusUnprocessableEntity)
 
@@ -84,7 +87,6 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 
 		if errors.Is(err, ErrUsernameExists) {
 			w.WriteHeader(http.StatusNoContent)
-			_, _ = w.Write([]byte("{}"))
 
 			return
 		}
@@ -96,34 +98,25 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		bytes, err := json.Marshal(newUser)
-		if err != nil {
-			log.Printf("error when marshaling user: %v", err)
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-
-			return
-		}
-
 		w.WriteHeader(http.StatusCreated)
 
-		if _, err := w.Write(bytes); err != nil {
-			log.Printf("Failed to write bytes error: %v", err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-
-			return
-		}
+		return
 	}
 }
 
 func handleGetUserHabits(controller Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: create JWT token validation
-		// token, err := getBearerToken(r)
-
-		user, err := getUserFromRequest(r)
+		claims, err := getBearerToken(r)
 		if err != nil {
-			log.Printf("Error getting user from request: %v", err)
-			http.Error(w, missingUserInputErrMessage, http.StatusInternalServerError)
+			log.Printf("err when getting bearer token: %v", err)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
+			return
+		}
+
+		user, ok := controller.GetUserByName(claims["username"].(string))
+		if !ok {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			return
 		}
@@ -171,7 +164,7 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 
 		user, ok := controller.GetUserByName(claims["username"].(string))
 		if !ok {
-			http.Error(w, "User does not exist", http.StatusNotFound)
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			return
 		}
@@ -210,7 +203,7 @@ func handlePostUserLogin(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		token, err := generateJWT(user.Username)
+		tokenMap, err := generateJWT(user.Username)
 		if err != nil {
 			log.Printf("error generating jwt: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
@@ -218,7 +211,7 @@ func handlePostUserLogin(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		bytes, err := json.Marshal(token)
+		bytes, err := json.Marshal(tokenMap)
 		if err != nil {
 			log.Printf("error when marshaling user: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)

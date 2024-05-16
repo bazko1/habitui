@@ -16,7 +16,13 @@ import (
 	"github.com/bazko1/habitui/habit"
 )
 
-const testUserString = `{"Username":"foo","Email":"bar"}`
+var testUser = UserModel{
+	Username: "foo",
+	Email:    "bar",
+	Password: "test",
+}
+
+var testUserString = `{"Username":"foo","Email":"bar","Password":"test"}`
 
 func startServer(t *testing.T) net.Listener {
 	t.Helper()
@@ -47,7 +53,7 @@ func startServer(t *testing.T) net.Listener {
 	return ln
 }
 
-func createUser(t *testing.T, addr string) UserModel {
+func createUser(t *testing.T, addr string) {
 	t.Helper()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -65,15 +71,36 @@ func createUser(t *testing.T, addr string) UserModel {
 	defer resp.Body.Close()
 
 	if code := resp.StatusCode; code != 201 {
-		t.Fatalf("Incorrect status code has '%d' but expected 201", code)
+		t.Fatalf("Incorrect status code for user create has '%d' but expected 201", code)
+	}
+}
+
+func loginUser(t *testing.T, addr string) map[string]any {
+	t.Helper()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, _ := http.NewRequestWithContext(ctx,
+		http.MethodPost,
+		addr+"/user/login",
+		strings.NewReader(testUserString))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("Error during post call user login: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if code := resp.StatusCode; code != 200 {
+		t.Fatalf("Incorrect status code for login has '%d' but expected 201", code)
 	}
 
-	user := UserModel{}
-	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
-		t.Fatalf("Error decoding user body: %v", err)
+	tokenData := map[string]any{}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenData); err != nil {
+		t.Fatalf("Error decoding login token body: %v", err)
 	}
-
-	return user
+	return tokenData
 }
 
 func TestCreateUser(t *testing.T) {
@@ -83,7 +110,7 @@ func TestCreateUser(t *testing.T) {
 	defer ln.Close()
 	address := "http://" + ln.Addr().String()
 	fmt.Println("Server listening at: ", address)
-	_ = createUser(t, address)
+	createUser(t, address)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -117,13 +144,14 @@ func TestUpdateUserTasks(t *testing.T) {
 	address := "http://" + ln.Addr().String()
 	fmt.Println("Server listening at: ", address)
 
-	getHabits := func(body io.Reader) *http.Response {
+	getHabits := func(token string) *http.Response {
 		url := address + "/user/habits"
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, body)
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
+		req.Header.Add("Authorization", token)
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -133,17 +161,16 @@ func TestUpdateUserTasks(t *testing.T) {
 		return resp
 	}
 
-	user := createUser(t, address)
-	b, _ := json.Marshal(user)
-	userJSON := string(b)
-	baseBody := strings.NewReader(userJSON)
+	createUser(t, address)
+	tokenData := loginUser(t, address)
+	token := tokenData["access_token"]
 
-	resp := getHabits(baseBody)
+	resp := getHabits(fmt.Sprintf("Bearer %s", token))
 	defer resp.Body.Close()
 
 	bytes, _ := io.ReadAll(resp.Body)
 	if string(bytes) != "[]" {
-		t.Fatal("Error initial user habits should be empty")
+		t.Fatalf("Error initial user habits should be empty while it is %s", string(bytes))
 	}
 
 	startDate := time.Date(2024, 3, 30, 12, 0, 0, 0, time.Local)
@@ -159,13 +186,15 @@ func TestUpdateUserTasks(t *testing.T) {
 		startDate = startDate.AddDate(0, 0, 1)
 	}
 
+	user := UserModel{}
+	json.Unmarshal([]byte(testUserString), user)
 	user.Habits = habit.TaskList{task}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	b, _ = json.Marshal(user)
-	userJSON = string(b)
+	b, _ := json.Marshal(user)
+	userJSON := string(b)
 	bodyWithHabits := strings.NewReader(userJSON)
 
 	req, _ := http.NewRequestWithContext(ctx,
@@ -179,7 +208,10 @@ func TestUpdateUserTasks(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	resp = getHabits(strings.NewReader(userJSON))
+	tokenData = loginUser(t, address)
+	token = tokenData["access_token"]
+
+	resp = getHabits(fmt.Sprintf("Bearer %s", token))
 	defer resp.Body.Close()
 
 	if code := resp.StatusCode; code != 200 {
