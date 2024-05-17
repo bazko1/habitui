@@ -108,26 +108,27 @@ func handleGetUserHabits(controller Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims, err := getBearerToken(r)
 		if err != nil {
-			log.Printf("err when getting bearer token: %v", err)
+			log.Printf("Err when getting bearer token: %v", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			return
 		}
 
-		user, ok := controller.GetUserByName(claims["username"].(string))
+		username, ok := claims["username"].(string)
 		if !ok {
+			log.Printf("Failed to cast %#v to string.", claims["username"])
+			http.Error(w, "Failed to get user.", http.StatusInternalServerError)
+		}
+
+		user, exists := controller.GetUserByName(username)
+		if !exists {
+			log.Printf("User %s does not exists", username)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			return
 		}
 
 		habits, err := controller.GetUserHabits(user)
-		if errors.Is(err, ErrNonExistentUserOrPassword) {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-
-			return
-		}
-
 		if err != nil {
 			log.Printf("Getting user habits error: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)

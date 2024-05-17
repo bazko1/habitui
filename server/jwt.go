@@ -19,7 +19,7 @@ const jwtTokenDuration = 10 * time.Minute
 func generateJWT(username string) (map[string]any, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username":   username,
-		"exp":        time.Now().Add(jwtTokenDuration),
+		"exp":        time.Now().Add(jwtTokenDuration).Unix(),
 		"authorized": true,
 	})
 
@@ -45,12 +45,12 @@ func parseAndValidateJWT(tokenString string) (jwt.MapClaims, error) {
 		return secretKey, nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil {
-		return jwt.MapClaims{}, fmt.Errorf("error parsing toknenString during validation: %w", err)
+		return jwt.MapClaims{}, fmt.Errorf("error parsing token string during validation: %w", err)
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims, nil
-	} else {
-		return jwt.MapClaims{}, ErrInvalidJwtToken
 	}
+
+	return jwt.MapClaims{}, ErrInvalidJwtToken
 }

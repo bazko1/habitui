@@ -54,20 +54,21 @@ func (controller *InMemoryController) UpdateUserHabits(user UserModel, habits ha
 }
 
 func (controller InMemoryController) GetUserHabits(user UserModel) (habit.TaskList, error) {
-	if controller.IsValid(user) {
-		return habit.TaskList{}, ErrNonExistentUserOrPassword
+	if u, exist := controller.users[user.Username]; exist {
+		return u.Habits, nil
 	}
 
-	return controller.users[user.Username].Habits, nil
+	return habit.TaskList{}, ErrNonExistentUserOrPassword
 }
 
 func (controller InMemoryController) IsValid(user UserModel) bool {
 	u, exist := controller.users[user.Username]
+
 	return exist && u.Password == user.Password
 }
 
-func (c InMemoryController) GetUserByName(name string) (UserModel, bool) {
-	u, exist := c.users[name]
+func (controller InMemoryController) GetUserByName(name string) (UserModel, bool) {
+	u, exist := controller.users[name]
 	if !exist {
 		return UserModel{}, false
 	}
