@@ -163,8 +163,15 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		user, ok := controller.GetUserByName(claims["username"].(string))
+		username, ok := claims["username"].(string)
 		if !ok {
+			log.Printf("Failed to cast %#v to string.", claims["username"])
+			http.Error(w, "Failed to get user.", http.StatusInternalServerError)
+		}
+
+		user, exists := controller.GetUserByName(username)
+		if !exists {
+			log.Printf("User %s does not exists", username)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			return

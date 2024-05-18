@@ -16,13 +16,7 @@ import (
 	"github.com/bazko1/habitui/habit"
 )
 
-var testUser = UserModel{
-	Username: "foo",
-	Email:    "bar",
-	Password: "test",
-}
-
-var testUserString = `{"Username":"foo","Email":"bar","Password":"test"}`
+const testUserString = `{"Username":"foo","Email":"bar","Password":"test"}`
 
 func startServer(t *testing.T) net.Listener {
 	t.Helper()
@@ -100,6 +94,7 @@ func loginUser(t *testing.T, addr string) map[string]any {
 	if err := json.NewDecoder(resp.Body).Decode(&tokenData); err != nil {
 		t.Fatalf("Error decoding login token body: %v", err)
 	}
+
 	return tokenData
 }
 
@@ -115,6 +110,8 @@ func TestCreateUser(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// check if recreating user returns status no content
+	// with empty body
 	req, _ := http.NewRequestWithContext(ctx,
 		http.MethodPost,
 		address+"/user/create",
@@ -163,7 +160,7 @@ func TestUpdateUserTasks(t *testing.T) {
 
 	createUser(t, address)
 	tokenData := loginUser(t, address)
-	token := tokenData["access_token"]
+	token, _ := tokenData["access_token"].(string)
 
 	resp := getHabits(fmt.Sprintf("Bearer %s", token))
 	defer resp.Body.Close()
@@ -187,7 +184,7 @@ func TestUpdateUserTasks(t *testing.T) {
 	}
 
 	user := UserModel{}
-	json.Unmarshal([]byte(testUserString), user)
+	_ = json.Unmarshal([]byte(testUserString), &user)
 	user.Habits = habit.TaskList{task}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -197,10 +194,12 @@ func TestUpdateUserTasks(t *testing.T) {
 	userJSON := string(b)
 	bodyWithHabits := strings.NewReader(userJSON)
 
+	token, _ = loginUser(t, address)["access_token"].(string)
 	req, _ := http.NewRequestWithContext(ctx,
 		http.MethodPut,
 		address+"/user/habits",
 		bodyWithHabits)
+	req.Header.Add("Authorization", "Bearer "+token)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -208,10 +207,9 @@ func TestUpdateUserTasks(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	tokenData = loginUser(t, address)
-	token = tokenData["access_token"]
+	token, _ = loginUser(t, address)["access_token"].(string)
 
-	resp = getHabits(fmt.Sprintf("Bearer %s", token))
+	resp = getHabits("Bearer " + token)
 	defer resp.Body.Close()
 
 	if code := resp.StatusCode; code != 200 {

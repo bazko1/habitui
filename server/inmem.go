@@ -42,10 +42,6 @@ func (controller *InMemoryController) CreateNewUser(u UserModel) (UserModel, err
 
 func (controller *InMemoryController) UpdateUserHabits(user UserModel, habits habit.TaskList,
 ) error {
-	if controller.IsValid(user) {
-		return ErrNonExistentUserOrPassword
-	}
-
 	u := controller.users[user.Username]
 	u.Habits = habits
 	controller.users[user.Username] = u
