@@ -7,58 +7,84 @@ import (
 	"time"
 )
 
-type JSONTask struct {
-	*Task
+type taskJSON struct {
+	Version      string
+	Name         string
+	Description  string
+	CreationDate time.Time
+
 	YearlyTaskCompletion   YearlyTaskCompletion
 	LastTimeCompleted      time.Time
 	CurrentStrike          int
+	BestStrikeThisMonth    int
 	YearlyBestStrike       YearlyBestStrike
 	BestStrikeLastFinished time.Time
 }
 
-func (task *Task) ToJSONTask() JSONTask {
-	return JSONTask{
-		task,
+func (task Task) MarshalJSON() ([]byte, error) {
+	if task.Version == "" {
+		task.Version = TaskVersionLatest
+	}
+
+	bytes, err := json.Marshal(taskJSON{
+		task.Version,
+		task.Name,
+		task.Description,
+		task.CreationDate,
 		task.yearlyTaskCompletion,
 		task.lastTimeCompleted,
 		task.currentStrike,
+		task.bestStrikeThisMonth,
 		task.yearlyBestStrike,
 		task.bestStrikeLastFinished,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal Task: %w", err)
 	}
+	// TODO: For now I stick with extra struct that capitalizes
+	// all the fields. I might want to write un/marshaler that
+	// converts struct to map[string]any and loops over field
+	// names and capitalizes them so that I do not need to maintain
+	// both JSONTask and Task.
+
+	return bytes, nil
+}
+
+func (task *Task) UnmarshalJSON(data []byte) error {
+	jsonTask := taskJSON{}
+	if err := json.Unmarshal(data, &jsonTask); err != nil {
+		return fmt.Errorf("failed to unmarshal Task: %w", err)
+	}
+
+	task.Version = jsonTask.Version
+	task.Name = jsonTask.Name
+	task.Description = jsonTask.Description
+	task.CreationDate = jsonTask.CreationDate
+	task.GetTime = time.Now
+	task.yearlyTaskCompletion = jsonTask.YearlyTaskCompletion
+	task.lastTimeCompleted = jsonTask.LastTimeCompleted
+	task.currentStrike = jsonTask.CurrentStrike
+	task.yearlyBestStrike = jsonTask.YearlyBestStrike
+	task.bestStrikeLastFinished = jsonTask.BestStrikeLastFinished
+
+	if task.Version == "" {
+		task.Version = TaskVersionLatest
+	}
+
+	return nil
 }
 
 func JSONLoadTasks(bytes []byte) (TaskList, error) {
-	jsonTasks := []JSONTask{}
-
-	if err := json.Unmarshal(bytes, &jsonTasks); err != nil {
+	taskList := TaskList{}
+	if err := json.Unmarshal(bytes, &taskList); err != nil {
 		return nil, fmt.Errorf("load json failed to umarshal bytes: %w", err)
-	}
-
-	taskList := make(TaskList, 0, len(jsonTasks))
-	for _, jsonTask := range jsonTasks {
-		taskList = append(taskList, Task{
-			Name:                   jsonTask.Name,
-			Description:            jsonTask.Description,
-			CreationDate:           jsonTask.CreationDate,
-			GetTime:                time.Now,
-			yearlyTaskCompletion:   jsonTask.YearlyTaskCompletion,
-			lastTimeCompleted:      jsonTask.LastTimeCompleted,
-			currentStrike:          jsonTask.CurrentStrike,
-			yearlyBestStrike:       jsonTask.YearlyBestStrike,
-			bestStrikeLastFinished: jsonTask.BestStrikeLastFinished,
-		})
 	}
 
 	return taskList, nil
 }
 
 func JSONSaveTasks(filename string, tasks TaskList) error {
-	exportableTasks := make([]JSONTask, 0, len(tasks))
-	for _, t := range tasks {
-		exportableTasks = append(exportableTasks, t.ToJSONTask())
-	}
-
-	bytes, err := json.MarshalIndent(exportableTasks, "", "  ")
+	bytes, err := json.MarshalIndent(tasks, "", "  ")
 	if err != nil {
 		return fmt.Errorf("save json failed to marshall tasks(%v): %w", tasks, err)
 	}

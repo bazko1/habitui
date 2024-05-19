@@ -5,12 +5,15 @@ import (
 	"time"
 )
 
+const TaskVersionLatest = "v1"
+
 // TaskList is a slice of tasks.
 type TaskList []Task
 
 // Task is an occurring event that has its own name identifier.
 // Each task can be completed once a day.
 type Task struct {
+	Version      string
 	Name         string
 	Description  string
 	CreationDate time.Time
@@ -19,7 +22,9 @@ type Task struct {
 	yearlyTaskCompletion YearlyTaskCompletion
 	lastTimeCompleted    time.Time
 	currentStrike        int
-	// TODO: CurrentMonthBestStrike actually shows
+	// TODO: CurrentMonthBestStrike actually shows best strike ever that was finished in
+	// current month. I think I would like it to show best strikes in current month
+	// in a sense that it is value from 0-31.
 	bestStrikeThisMonth    int
 	yearlyBestStrike       YearlyBestStrike
 	bestStrikeLastFinished time.Time
@@ -37,6 +42,7 @@ func WithCustomTime(name, description string, getTime func() time.Time) Task {
 	}
 
 	return Task{
+		TaskVersionLatest,
 		name,
 		description,
 		getTime(),
