@@ -174,7 +174,7 @@ func TestUpdateUserTasks(t *testing.T) {
 	now := func() time.Time {
 		return startDate
 	}
-	task := habit.WithCustomTime("work on habittui", "daily app grind", now)
+	task := habit.WithCustomTime("work on habitui", "daily app grind", now)
 	completions := 5
 
 	for range completions {
@@ -190,15 +190,15 @@ func TestUpdateUserTasks(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	b, _ := json.Marshal(user)
+	b, _ := json.Marshal(user.Habits)
 	userJSON := string(b)
-	bodyWithHabits := strings.NewReader(userJSON)
+	newHabits := strings.NewReader(userJSON)
 
 	token, _ = loginUser(t, address)["access_token"].(string)
 	req, _ := http.NewRequestWithContext(ctx,
 		http.MethodPut,
 		address+"/user/habits",
-		bodyWithHabits)
+		newHabits)
 	req.Header.Add("Authorization", "Bearer "+token)
 
 	resp, err := http.DefaultClient.Do(req)
@@ -206,6 +206,10 @@ func TestUpdateUserTasks(t *testing.T) {
 		t.Fatalf("Error during post call user creation: %v", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("Put /user/habits should return %d while it returned %d", http.StatusOK, resp.StatusCode)
+	}
 
 	token, _ = loginUser(t, address)["access_token"].(string)
 
@@ -221,7 +225,14 @@ func TestUpdateUserTasks(t *testing.T) {
 		t.Fatalf("Error decoding user body: %v", err)
 	}
 
-	fmt.Println("updated:=", updatedHabits)
-	fmt.Println(reflect.DeepEqual(updatedHabits, user.Habits))
-	// fmt.Println(updatedHabits[0].AllCompletion())
+	// TODO: Lets for now compare jsons marshal
+	// I might want to write custom comparisor
+	// that looks at fields in detail.
+	bytesOld, _ := json.MarshalIndent(user.Habits, "", "  ")
+	bytesNew, _ := json.MarshalIndent(updatedHabits, "", "  ")
+	if oldH, newH := string(bytesOld), string(bytesNew); !reflect.DeepEqual(newH, oldH) {
+		t.Fatalf(`Updated tasks returned by server differ from template:
+			old:= %v
+		  new:= %v`, oldH, newH)
+	}
 }

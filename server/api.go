@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
+	"github.com/bazko1/habitui/habit"
 )
 
 const missingUserInputErrMessage = "Failed to decode user or missing data."
@@ -67,6 +69,22 @@ func createHandler(controller Controller) http.Handler {
 }
 
 func handlePostUserCreate(controller Controller) http.HandlerFunc {
+	// TODO: this does not work properly need to refactor so that
+	// TODO: this does not work properly need to refactor so that
+	// TODO: this does not work properly need to refactor so that
+	// TODO: this does not work properly need to refactor so that
+	// this works with json from habit module otherwise the
+	// tasks will not be properly filled with data and will be
+	// just nil initialized
+	// this works with json from habit module otherwise the
+	// tasks will not be properly filled with data and will be
+	// just nil initialized
+	// this works with json from habit module otherwise the
+	// tasks will not be properly filled with data and will be
+	// just nil initialized
+	// this works with json from habit module otherwise the
+	// tasks will not be properly filled with data and will be
+	// just nil initialized
 	return func(w http.ResponseWriter, r *http.Request) {
 		// TODO this should get username, email, password
 		// and create new user and create jwt token
@@ -151,16 +169,20 @@ func handleGetUserHabits(controller Controller) http.HandlerFunc {
 
 func handlePutUserHabits(controller Controller) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: this does not work properly need to refactor so that
-		// this works with json from habit module otherwise the
-		// tasks will not be properly filled with data and will be
-		// just nil initialized
 		claims, err := getBearerToken(r)
 		if err != nil {
 			log.Printf("err when getting bearer token: %v", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 			return
+		}
+
+		newHabits := habit.TaskList{}
+
+		decoder := json.NewDecoder(r.Body)
+		if err := decoder.Decode(&newHabits); err != nil {
+			log.Printf("Error decoding TaskList from body: %v", err)
+			http.Error(w, "Error decoding task list data.", http.StatusInternalServerError)
 		}
 
 		username, ok := claims["username"].(string)
@@ -177,13 +199,7 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		err = controller.UpdateUserHabits(user, user.Habits)
-		if errors.Is(err, ErrNonExistentUserOrPassword) {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-
-			return
-		}
-
+		err = controller.UpdateUserHabits(user, newHabits)
 		if err != nil {
 			log.Printf("Updating user habits error: %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
