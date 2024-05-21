@@ -23,6 +23,7 @@ const (
 // shows days in a month when task was completed.
 func RenderCalendar(task habit.Task) string { //nolint:funlen // lets keep it as long blob for now
 	now := task.GetTime()
+	todayRowCol := [2]int{}
 	monthDays := getDaysInMonth(time.Now())
 	firstDay := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
 	firstDayWeekday := int(firstDay.Weekday())
@@ -54,6 +55,10 @@ func RenderCalendar(task habit.Task) string { //nolint:funlen // lets keep it as
 		row := (calendarDay - 1) / weekDays
 		col := (calendarDay - 1) % weekDays
 
+		if i == now.Day() {
+			todayRowCol = [2]int{row, col}
+		}
+
 		if task.WasCompletedAt(now.Year(), now.Month(), i) {
 			completedDays = append(completedDays, [2]int{row, col})
 		}
@@ -77,18 +82,25 @@ func RenderCalendar(task habit.Task) string { //nolint:funlen // lets keep it as
 	re := lipgloss.NewRenderer(os.Stdout)
 	baseStyle := re.NewStyle().Padding(0, 1)
 	labelStyle := re.NewStyle().Foreground(lipgloss.Color("241"))
-	selectedStyle := baseStyle.Copy().Foreground(lipgloss.Color("#01BE85")).Background(lipgloss.Color("#00432F"))
+	finishedStyle := baseStyle.Copy().Foreground(lipgloss.Color("#01BE85")).Background(lipgloss.Color("#00432F"))
 	t := table.New().
 		Border(lipgloss.NormalBorder()).
 		BorderRow(true).
 		BorderColumn(true).
 		Rows(weeks...).
 		StyleFunc(func(row, col int) lipgloss.Style {
+			style := baseStyle
+
 			if slices.ContainsFunc(completedDays, func(a [2]int) bool { return a[0] == row-1 && a[1] == col }) {
-				return selectedStyle
+				style = finishedStyle
 			}
 
-			return baseStyle
+			if row-1 == todayRowCol[0] &&
+				col == todayRowCol[1] {
+				style = style.Copy().Foreground(lipgloss.Color("40"))
+			}
+
+			return style
 		})
 
 	dayNames := labelStyle.Render(strings.Join([]string{" Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"}, "  "))
