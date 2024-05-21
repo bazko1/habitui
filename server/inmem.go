@@ -44,6 +44,7 @@ func (controller *InMemoryController) UpdateUserHabits(user UserModel, habits ha
 ) error {
 	u := controller.users[user.Username]
 	u.Habits = habits
+
 	controller.users[user.Username] = u
 
 	return nil

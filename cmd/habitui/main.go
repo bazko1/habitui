@@ -47,6 +47,10 @@ func getIOFiles(tasksFile string) (string, string) {
 func main() {
 	tasksFile := flag.String("data", "", "file name for loading/saving tasks data")
 	disableDebug := flag.Bool("no-debug", false, "do not log debug data to file")
+
+	// TODO: Add this when server stuff done
+	// remoteConfig := flag.String("remote-config", "habitui-user-confg.json", "configuration with remote username and password to store data in server")
+	// enableRemote := flag.Bool("enable-remote", false, "enable storing data into remote location")
 	flag.Parse()
 
 	var tasks habit.TaskList

@@ -69,25 +69,7 @@ func createHandler(controller Controller) http.Handler {
 }
 
 func handlePostUserCreate(controller Controller) http.HandlerFunc {
-	// TODO: this does not work properly need to refactor so that
-	// TODO: this does not work properly need to refactor so that
-	// TODO: this does not work properly need to refactor so that
-	// TODO: this does not work properly need to refactor so that
-	// this works with json from habit module otherwise the
-	// tasks will not be properly filled with data and will be
-	// just nil initialized
-	// this works with json from habit module otherwise the
-	// tasks will not be properly filled with data and will be
-	// just nil initialized
-	// this works with json from habit module otherwise the
-	// tasks will not be properly filled with data and will be
-	// just nil initialized
-	// this works with json from habit module otherwise the
-	// tasks will not be properly filled with data and will be
-	// just nil initialized
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO this should get username, email, password
-		// and create new user and create jwt token
 		user, err := getUserFromRequest(r)
 		if err != nil {
 			log.Printf("Error getting user from request: %v", err)
