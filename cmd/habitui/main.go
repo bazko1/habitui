@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/bazko1/habitui/client"
 	"github.com/bazko1/habitui/habit"
 	"github.com/bazko1/habitui/tui"
 	tea "github.com/charmbracelet/bubbletea"
@@ -48,25 +49,52 @@ func main() {
 	tasksFile := flag.String("data", "", "file name for loading/saving tasks data")
 	disableDebug := flag.Bool("no-debug", false, "do not log debug data to file")
 
-	// TODO: Add this when server stuff done
-	// remoteConfig := flag.String("remote-config", "habitui-user-confg.json", "configuration with remote username and password to store data in server")
-	// enableRemote := flag.Bool("enable-remote", false, "enable storing data into remote location")
+	remoteAddress := flag.String("remote-server", "localhost:3000", "address of remote server for loading saving tasks data")
+	remoteUser := flag.String("remote-user", "", "username for remote login")
+	remotePassword := flag.String("remote-password", "", "password for remote login")
+	enableRemote := flag.Bool("enable-remote", false, "enable storing data into remote location")
 	flag.Parse()
 
 	var tasks habit.TaskList
 
-	inputFile, outputFile := getIOFiles(*tasksFile)
-	file, err := os.ReadFile(inputFile)
+	var outputFile string
 
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		fmt.Printf("failed to open tasks file '%s': %v\n", inputFile, err)
-		os.Exit(1)
+	if !*enableRemote {
+		var inputFile string
+		inputFile, outputFile = getIOFiles(*tasksFile)
+		file, err := os.ReadFile(inputFile)
+
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			fmt.Printf("failed to open tasks file '%s': %v\n", inputFile, err)
+			os.Exit(1)
+		}
+
+		if !errors.Is(err, os.ErrNotExist) {
+			tasks, err = habit.JSONLoadTasks(file)
+			if err != nil {
+				fmt.Println("failed to load tasks:", err)
+				os.Exit(1)
+			}
+		}
 	}
 
-	if !errors.Is(err, os.ErrNotExist) {
-		tasks, err = habit.JSONLoadTasks(file)
+	if *enableRemote {
+		if *remoteUser == "" || *remotePassword == "" {
+			fmt.Println("Username and password must be provided for remote connection.")
+			os.Exit(1)
+		}
+
+		remoteClient := client.HTTPClient{
+			Address:  *remoteAddress,
+			Username: *remoteUser,
+			Password: *remotePassword,
+		}
+
+		var err error
+
+		tasks, err = remoteClient.LoadTasksOrCreateUser()
 		if err != nil {
-			fmt.Println("failed to load tasks:", err)
+			fmt.Println("Failed to connect to remote error: ", err)
 			os.Exit(1)
 		}
 	}
