@@ -124,10 +124,26 @@ func main() {
 	model, _ = out.(tui.Model)
 
 	defer func() {
-		err := habit.JSONSaveTasks(outputFile, model.Tasks())
-		if err != nil {
-			logger.Printf("failed to save tasks: %v", err)
-			os.Exit(1)
+		if *enableRemote {
+			// TODO: Refactor to reuse previous remote client and
+			// it might be better as func arguments instead of
+			// methods on strucs - think about that.
+			remoteClient := client.HTTPClient{
+				Address:  *remoteAddress,
+				Username: *remoteUser,
+				Password: *remotePassword,
+			}
+
+			if err := remoteClient.SaveUserTasks(model.Tasks()); err != nil {
+				logger.Printf("failed to save tasks to remote: %v", err)
+				os.Exit(1)
+			}
+		} else {
+			err := habit.JSONSaveTasks(outputFile, model.Tasks())
+			if err != nil {
+				logger.Printf("failed to save tasks: %v", err)
+				os.Exit(1)
+			}
 		}
 
 		logger.Println("saved state closing")

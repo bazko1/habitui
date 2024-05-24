@@ -19,10 +19,7 @@ type HTTPClient struct {
 	Password string
 }
 
-// LoadTasksOrCreateUser check if user with given username exists
-// if it does tasks belonging to user will be returned otherwise
-// user is created and empty task list is returned.
-func (client HTTPClient) LoadTasksOrCreateUser() (habit.TaskList, error) {
+func (client HTTPClient) login() (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), httpTimeout*time.Second)
 	defer cancel()
 
@@ -36,31 +33,42 @@ func (client HTTPClient) LoadTasksOrCreateUser() (habit.TaskList, error) {
 	if err != nil {
 		// TODO: Will need to handle user creation differently. Probably I need
 		// special error from server that directly points that user does not exist.
-		return habit.TaskList{}, fmt.Errorf("failed to login error: %w", err)
+		return "", fmt.Errorf("failed to login error: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if code := resp.StatusCode; code != http.StatusOK {
-		return habit.TaskList{}, fmt.Errorf("failed to login incorrect status code %d", code)
+		return "", fmt.Errorf("failed to login incorrect status code %d", code)
 	}
 
 	tokenData := map[string]any{}
 	if err := json.NewDecoder(resp.Body).Decode(&tokenData); err != nil {
-		return habit.TaskList{}, fmt.Errorf("failed to decode token data to login error: %w", err)
+		return "", fmt.Errorf("failed to decode token data to login error: %w", err)
 	}
 
 	token, _ := tokenData["access_token"].(string)
+	return token, nil
+}
 
+// LoadTasksOrCreateUser check if user with given username exists
+// if it does tasks belonging to user will be returned otherwise
+// user is created and empty task list is returned.
+func (client HTTPClient) LoadTasksOrCreateUser() (habit.TaskList, error) {
 	// get habits
-	ctx, cancel = context.WithTimeout(context.Background(), httpTimeout*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), httpTimeout*time.Second)
 	defer cancel()
 
-	req, _ = http.NewRequestWithContext(ctx, http.MethodGet, client.Address+"/user/habits", http.NoBody)
+	token, err := client.login()
+	if err != nil {
+		return habit.TaskList{}, fmt.Errorf("failed to login user to load tasks: %w", err)
+	}
+
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, client.Address+"/user/habits", http.NoBody)
 	req.Header.Add("Authorization", "Bearer "+token)
 
-	resp, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return habit.TaskList{}, fmt.Errorf("failed to get user habits error: %w", err)
+		return habit.TaskList{}, fmt.Errorf("failed to get user habits: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -70,8 +78,41 @@ func (client HTTPClient) LoadTasksOrCreateUser() (habit.TaskList, error) {
 
 	habits := habit.TaskList{}
 	if err := json.NewDecoder(resp.Body).Decode(&habits); err != nil {
-		return habit.TaskList{}, fmt.Errorf("failed to decode habits tasks %w", err)
+		return habit.TaskList{}, fmt.Errorf("failed to decode habits tasks: %w", err)
 	}
 
 	return habits, nil
+}
+
+// SaveUserTasks saves client habits to remote server.
+func (client HTTPClient) SaveUserTasks(habits habit.TaskList) error {
+	ctx, cancel := context.WithTimeout(context.Background(), httpTimeout*time.Second)
+	defer cancel()
+
+	token, err := client.login()
+	if err != nil {
+		return fmt.Errorf("failed to login user to load tasks: %w", err)
+	}
+
+	b, _ := json.Marshal(habits)
+	userJSON := string(b)
+	newHabits := strings.NewReader(userJSON)
+
+	req, _ := http.NewRequestWithContext(ctx,
+		http.MethodPut,
+		client.Address+"/user/habits",
+		newHabits)
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("error during post call user creation: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("put /user/habits should return %d while it returned %d", http.StatusOK, resp.StatusCode)
+	}
+
+	return nil
 }
