@@ -15,13 +15,6 @@ const missingUserInputErrMessage = "Failed to decode user or missing data."
 
 var ErrBadAuthorizationHeader = errors.New("bad authorization header")
 
-func logRequestMiddleware(next http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("method: %s, path: %s", r.Method, r.URL.Path)
-		next.ServeHTTP(w, r)
-	}
-}
-
 func getBearerToken(r *http.Request) (map[string]any, error) {
 	reqToken := r.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer")
@@ -61,10 +54,6 @@ func createHandler(controller Controller) http.Handler {
 	handler.HandleFunc("GET /user/habits", handleGetUserHabits(controller))
 	handler.HandleFunc("PUT /user/habits", handlePutUserHabits(controller))
 
-	// TODO: for now use single one time token auth that cannot be revoked
-	// implement more sophisticated authentication later
-	// handler.HandleFunc("PUT /user/token", handlePutUserToken(controller))
-
 	return logRequestMiddleware(handler)
 }
 
@@ -99,8 +88,6 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusCreated)
-
-		return
 	}
 }
 
