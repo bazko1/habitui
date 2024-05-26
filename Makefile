@@ -1,8 +1,11 @@
+
 run:
 	@go run cmd/habitui/main.go
 run-dev:
 	@cp testdata/.habitui.json .
 	@go run cmd/habitui/main.go
+run-remote:
+	go run cmd/habitui/main.go -remote-password "test" -remote-user "foo" -remote-server "http://localhost:3000" -enable-remote
 serve:
 	go run cmd/server/main.go
 test:

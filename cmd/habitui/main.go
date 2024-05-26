@@ -94,7 +94,7 @@ func main() {
 
 		tasks, err = remoteClient.LoadTasksOrCreateUser()
 		if err != nil {
-			fmt.Println("Failed to connect to remote error: ", err)
+			fmt.Println("Failed to connect to remote is address, username and password correct?\nError:", err)
 			os.Exit(1)
 		}
 	}
