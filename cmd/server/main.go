@@ -2,13 +2,24 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"time"
 
 	"github.com/bazko1/habitui/server"
 )
 
 func main() {
-	server, err := server.New()
+	host := flag.String("hostname", server.DefaultHost, "host name or ip to serve on")
+	port := flag.Int("port", server.DefaultPort, "port to serve on")
+	timeout := flag.Int64("timeout", server.DefaultReadTimeoutMiliseconds.Milliseconds(), "read timeout milliseconds")
+	flag.Parse()
+
+	server, err := server.New(
+		server.WithHost(*host),
+		server.WithPort(*port),
+		server.WithReadTimeout(time.Duration(*timeout)*time.Millisecond),
+	)
 	if err != nil {
 		fmt.Printf("Failed to create new server: %v\n", err)
 

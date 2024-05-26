@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	DefaultPort                      = 3000
-	DefaultHost                      = "localhost"
-	DefaultReadTimeout time.Duration = 100 * time.Millisecond
+	DefaultPort                                 = 3000
+	DefaultHost                                 = "localhost"
+	DefaultReadTimeoutMiliseconds time.Duration = 100 * time.Millisecond
 )
 
 type Option func(*Config) error
@@ -30,6 +30,7 @@ func WithPort(port int) Option {
 	}
 }
 
+// WithReadTimeout sets server read timeout in  milliseconds.
 func WithReadTimeout(timeout time.Duration) Option {
 	return func(c *Config) error {
 		c.readTimeout = timeout
@@ -48,7 +49,7 @@ func DefaultConfig() Config {
 	return Config{
 		host:        DefaultHost,
 		port:        DefaultPort,
-		readTimeout: DefaultReadTimeout,
+		readTimeout: DefaultReadTimeoutMiliseconds,
 	}
 }
 
