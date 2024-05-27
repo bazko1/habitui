@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"os"
@@ -9,10 +10,28 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const keyEnvName = "JWT_SECRET_KEY"
+
 var (
-	secretKey          = []byte(os.Getenv("JWT_SECRET_KEY"))
+	secretKey          = getEnvKey()
 	ErrInvalidJwtToken = errors.New("invalid jwt token")
 )
+
+func getEnvKey() []byte {
+	if value, ok := os.LookupEnv(keyEnvName); ok {
+		return []byte(value)
+	}
+
+	randLen := 64
+	b := make([]byte, randLen)
+
+	_, err := rand.Read(b)
+	if err != nil {
+		panic(fmt.Sprintf("failed to read random bytes: %v", err))
+	}
+
+	return b
+}
 
 const jwtTokenDuration = 10 * time.Minute
 
