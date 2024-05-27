@@ -9,7 +9,7 @@ run-remote:
 serve:
 	go run cmd/server/main.go
 test:
-	go test -count=1 ./...
+	go test -count=1 -race ./...
 gen-markdown:
 	pandoc README.md > README.html
 gen-testdata:
