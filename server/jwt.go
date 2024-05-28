@@ -1,37 +1,17 @@
 package server
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-const keyEnvName = "JWT_SECRET_KEY"
-
 var (
-	secretKey          = getEnvKey()
+	secretJWTKey       = getEnvKey()
 	ErrInvalidJwtToken = errors.New("invalid jwt token")
 )
-
-func getEnvKey() []byte {
-	if value, ok := os.LookupEnv(keyEnvName); ok {
-		return []byte(value)
-	}
-
-	randLen := 64
-	b := make([]byte, randLen)
-
-	_, err := rand.Read(b)
-	if err != nil {
-		panic(fmt.Sprintf("failed to read random bytes: %v", err))
-	}
-
-	return b
-}
 
 const jwtTokenDuration = 10 * time.Minute
 
@@ -42,7 +22,7 @@ func generateJWT(username string) (map[string]any, error) {
 		"authorized": true,
 	})
 
-	tokenString, err := token.SignedString(secretKey)
+	tokenString, err := token.SignedString(secretJWTKey)
 	if err != nil {
 		return map[string]any{}, fmt.Errorf("error generating jwt token: %w", err)
 	}
@@ -61,7 +41,7 @@ func parseAndValidateJWT(tokenString string) (jwt.MapClaims, error) {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return secretKey, nil
+		return secretJWTKey, nil
 	}, jwt.WithValidMethods([]string{"HS256"}))
 	if err != nil {
 		return jwt.MapClaims{}, fmt.Errorf("error parsing token string during validation: %w", err)

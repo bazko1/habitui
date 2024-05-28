@@ -14,6 +14,10 @@ func NewInMemoryController() InMemoryController {
 	return InMemoryController{users: make(map[string]UserModel)}
 }
 
+func (InMemoryController) Initialize() error {
+	return nil
+}
+
 func (controller *InMemoryController) CreateNewUser(u UserModel) (UserModel, error) {
 	username := u.Username
 	email := u.Email

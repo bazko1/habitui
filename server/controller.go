@@ -14,6 +14,7 @@ var (
 )
 
 type Controller interface {
+	Initialize() error
 	GetUserByName(name string) (UserModel, bool)
 	CreateNewUser(user UserModel) (UserModel, error)
 	UpdateUserHabits(user UserModel, habits habit.TaskList) error

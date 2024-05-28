@@ -56,6 +56,7 @@ func DefaultConfig() Config {
 func New(opts ...Option) (*http.Server, error) {
 	c := DefaultConfig()
 	controller := NewInMemoryController()
+	controller.Initialize()
 	h := createHandler(&controller)
 
 	for _, opt := range opts {
