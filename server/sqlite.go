@@ -12,6 +12,10 @@ type SQLiteController struct {
 	pool       *sql.DB
 }
 
+func NewSQLiteController(dataSource string) *SQLiteController {
+	return &SQLiteController{DataSource: dataSource, pool: nil}
+}
+
 func (c *SQLiteController) Initialize() error {
 	pool, err := sql.Open("sqlite3", c.DataSource)
 	if err != nil {
@@ -22,7 +26,7 @@ func (c *SQLiteController) Initialize() error {
 	c.pool = pool
 
 	createStmt := `
-	create table users (username text not null primary key,
+	create table if not exists users (username text not null primary key,
 	email text,
 	password text,
 	habits text

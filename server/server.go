@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,6 +11,7 @@ const (
 	DefaultPort                                 = 3000
 	DefaultHost                                 = "localhost"
 	DefaultReadTimeoutMiliseconds time.Duration = 100 * time.Millisecond
+	DefaultControllerEngine                     = "inmem"
 )
 
 type Option func(*Config) error
@@ -39,31 +41,63 @@ func WithReadTimeout(timeout time.Duration) Option {
 	}
 }
 
+// WithControllerEngine sets controller engine name that should be used.
+func WithControllerEngine(engineName string) Option {
+	return func(c *Config) error {
+		c.controllerEngine = engineName
+		// TODO:
+		// let me think if I would like to also set actual object or pointer here
+		// and validate if name is one of {'sqlite', 'imem'}
+		// alternatively this loigc will stay in New function..
+
+		return nil
+	}
+}
+
 type Config struct {
-	host        string
-	port        int
-	readTimeout time.Duration
+	host             string
+	port             int
+	readTimeout      time.Duration
+	controllerEngine string
 }
 
 func DefaultConfig() Config {
 	return Config{
-		host:        DefaultHost,
-		port:        DefaultPort,
-		readTimeout: DefaultReadTimeoutMiliseconds,
+		host:             DefaultHost,
+		port:             DefaultPort,
+		readTimeout:      DefaultReadTimeoutMiliseconds,
+		controllerEngine: DefaultControllerEngine,
 	}
 }
 
 func New(opts ...Option) (*http.Server, error) {
 	c := DefaultConfig()
-	controller := NewInMemoryController()
-	controller.Initialize()
-	h := createHandler(&controller)
 
 	for _, opt := range opts {
 		if err := opt(&c); err != nil {
 			return nil, fmt.Errorf("option failed %w", err)
 		}
 	}
+
+	var controller Controller
+
+	switch c.controllerEngine {
+	case "inmem":
+		controller = NewInMemoryController()
+	case "sqlite":
+		// TODO: Change uncomment when all controller methods are implemented.
+		// controller = NewSQLiteController(sqliteDatasePathEnvName)
+		panic("sqlite not yet implemented")
+	default:
+		return nil, errors.New("wrong controller engine provided")
+	}
+
+	err := controller.Initialize()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize controller: %w", err)
+	}
+
+	h := createHandler(controller)
 
 	server := &http.Server{
 		Addr:        fmt.Sprintf("%s:%d", c.host, c.port),

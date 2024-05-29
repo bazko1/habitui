@@ -13,13 +13,14 @@ func main() {
 	host := flag.String("hostname", server.DefaultHost, "host name or ip to serve on")
 	port := flag.Int("port", server.DefaultPort, "port to serve on")
 	timeout := flag.Int64("timeout", server.DefaultReadTimeoutMiliseconds.Milliseconds(), "read timeout milliseconds")
-	controllerEngine := flag.String("engine", "inmem", "engine to use for controller")
+	controllerEngine := flag.String("engine", server.DefaultControllerEngine, "engine to use for controller")
 	flag.Parse()
 
 	server, err := server.New(
 		server.WithHost(*host),
 		server.WithPort(*port),
 		server.WithReadTimeout(time.Duration(*timeout)*time.Millisecond),
+		server.WithControllerEngine(*controllerEngine),
 	)
 	if err != nil {
 		fmt.Printf("Failed to create new server: %v\n", err)
@@ -29,7 +30,7 @@ func main() {
 
 	fmt.Println("Server is listening at:", server.Addr)
 	// TODO: Check if engine is one of "inmem", "sqlite"
-	fmt.Println("Using controller engine", *controllerEngine)
+	fmt.Println("Using controller engine:", *controllerEngine)
 
 	if err := server.ListenAndServe(); err != nil {
 		fmt.Printf("Failed to listen and serve: %v", err)

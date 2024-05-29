@@ -31,7 +31,7 @@ func startServer(t *testing.T) net.Listener {
 
 	go func() {
 		defer close(serverServeError)
-		if err := http.Serve(ln, createHandler(&controller)); err != nil {
+		if err := http.Serve(ln, createHandler(controller)); err != nil {
 			serverServeError <- err
 		}
 	}()

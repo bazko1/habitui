@@ -10,8 +10,8 @@ type InMemoryController struct {
 	users map[string]UserModel
 }
 
-func NewInMemoryController() InMemoryController {
-	return InMemoryController{users: make(map[string]UserModel)}
+func NewInMemoryController() *InMemoryController {
+	return &InMemoryController{users: make(map[string]UserModel)}
 }
 
 func (InMemoryController) Initialize() error {

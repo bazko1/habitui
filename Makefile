@@ -8,6 +8,8 @@ run-remote:
 	go run cmd/habitui/main.go -remote-password "test" -remote-user "foo" -remote-server "http://localhost:3000" -enable-remote
 serve:
 	go run cmd/server/main.go
+serve-sqlite:
+	go run cmd/server/main.go -engine sqlite
 test:
 	go test -count=1 -race ./...
 gen-markdown:
