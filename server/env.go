@@ -9,7 +9,7 @@ import (
 // / nolint:gosec // it is credential name not credential itself.
 const secretJWTKeyEnvName = "JWT_SECRET_KEY"
 
-var sqliteDatasePathEnvName = getEnvVariable("SQLITEDB_PATH", "./sqlite.db")
+var sqliteDatasePathEnvName = getEnvVariable("SQLITEDB_PATH", "./habitui.db")
 
 func getEnvVariable(envName, defaultVal string) string {
 	if value, ok := os.LookupEnv(envName); ok {

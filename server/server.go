@@ -85,9 +85,7 @@ func New(opts ...Option) (*http.Server, error) {
 	case "inmem":
 		controller = NewInMemoryController()
 	case "sqlite":
-		// TODO: Change uncomment when all controller methods are implemented.
-		// controller = NewSQLiteController(sqliteDatasePathEnvName)
-		panic("sqlite not yet implemented")
+		controller = NewSQLiteController(sqliteDatasePathEnvName)
 	default:
 		return nil, errors.New("wrong controller engine provided")
 	}

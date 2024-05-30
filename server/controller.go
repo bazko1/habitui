@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrUsernameExists            = errors.New("user with given username already exists")
+	ErrUsernameAlreadyExists     = errors.New("user with given username already exists")
+	ErrUsernameDoesNotExist      = errors.New("user with given username does not exist")
 	ErrInccorectInput            = errors.New("incorrect input provided")
 	ErrEmailRegistered           = errors.New("some user already registered with given email")
 	ErrNonExistentUserOrPassword = errors.New("user with given name does not exist or incorrect password")
@@ -15,7 +16,7 @@ var (
 
 type Controller interface {
 	Initialize() error
-	GetUserByName(name string) (UserModel, bool)
+	GetUserByName(name string) (UserModel, error)
 	CreateNewUser(user UserModel) (UserModel, error)
 	UpdateUserHabits(user UserModel, habits habit.TaskList) error
 	GetUserHabits(user UserModel) (habit.TaskList, error)

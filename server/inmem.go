@@ -31,7 +31,7 @@ func (controller *InMemoryController) CreateNewUser(u UserModel) (UserModel, err
 	}
 
 	if _, exists := controller.users[username]; exists {
-		return UserModel{}, ErrUsernameExists
+		return UserModel{}, ErrUsernameAlreadyExists
 	}
 
 	controller.users[username] = UserModel{
@@ -68,11 +68,11 @@ func (controller InMemoryController) IsValid(user UserModel) bool {
 	return exist && u.Password == user.Password
 }
 
-func (controller InMemoryController) GetUserByName(name string) (UserModel, bool) {
+func (controller InMemoryController) GetUserByName(name string) (UserModel, error) {
 	u, exist := controller.users[name]
 	if !exist {
-		return UserModel{}, false
+		return UserModel{}, ErrUsernameDoesNotExist
 	}
 
-	return u, true
+	return u, nil
 }

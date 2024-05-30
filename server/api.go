@@ -74,7 +74,7 @@ func handlePostUserCreate(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		if errors.Is(err, ErrUsernameExists) {
+		if errors.Is(err, ErrUsernameAlreadyExists) {
 			w.WriteHeader(http.StatusNoContent)
 
 			return
@@ -107,11 +107,17 @@ func handleGetUserHabits(controller Controller) http.HandlerFunc {
 			http.Error(w, "Failed to get user.", http.StatusInternalServerError)
 		}
 
-		user, exists := controller.GetUserByName(username)
-		if !exists {
+		user, err := controller.GetUserByName(username)
+		if errors.Is(err, ErrUsernameDoesNotExist) {
 			log.Printf("User %s does not exists", username)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
+			return
+		}
+
+		if err != nil {
+			log.Printf("Getting user by name error %v", err)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 
@@ -160,11 +166,17 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 			http.Error(w, "Failed to get user.", http.StatusInternalServerError)
 		}
 
-		user, exists := controller.GetUserByName(username)
-		if !exists {
+		user, err := controller.GetUserByName(username)
+		if errors.Is(err, ErrUsernameDoesNotExist) {
 			log.Printf("User %s does not exists", username)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
+			return
+		}
+
+		if err != nil {
+			log.Printf("Getting user by name error %v", err)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
 			return
 		}
 
