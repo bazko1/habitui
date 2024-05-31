@@ -1,6 +1,7 @@
 package habit
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -19,6 +20,16 @@ type taskJSON struct {
 	BestStrikeThisMonth    int
 	YearlyBestStrike       YearlyBestStrike
 	BestStrikeLastFinished time.Time
+}
+
+func (t *TaskList) Scan(value interface{}) error {
+	return json.Unmarshal([]byte(value.(string)), t)
+}
+
+func (t TaskList) Value() (driver.Value, error) {
+	b, err := json.Marshal(t)
+
+	return string(b), err
 }
 
 func (task Task) MarshalJSON() ([]byte, error) {

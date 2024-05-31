@@ -118,6 +118,7 @@ func handleGetUserHabits(controller Controller) http.HandlerFunc {
 		if err != nil {
 			log.Printf("Getting user by name error %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
+
 			return
 		}
 
@@ -177,6 +178,7 @@ func handlePutUserHabits(controller Controller) http.HandlerFunc {
 		if err != nil {
 			log.Printf("Getting user by name error %v", err)
 			http.Error(w, "Internal error", http.StatusInternalServerError)
+
 			return
 		}
 

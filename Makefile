@@ -11,6 +11,8 @@ serve:
 serve-sqlite:
 	go run cmd/server/main.go -engine sqlite
 test:
+	go test -count=1 ./...
+test-race:
 	go test -count=1 -race ./...
 gen-markdown:
 	pandoc README.md > README.html

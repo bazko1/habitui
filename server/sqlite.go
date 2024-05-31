@@ -13,7 +13,6 @@ import (
 type SQLiteController struct {
 	DataSource string
 	pool       *sql.DB
-	insertStmt *sql.Stmt
 }
 
 func NewSQLiteController(dataSource string) *SQLiteController {
@@ -25,7 +24,6 @@ func (c *SQLiteController) Initialize() error {
 	if err != nil {
 		log.Fatal("unable to use data source name", err)
 	}
-	defer pool.Close()
 
 	c.pool = pool
 
@@ -44,44 +42,63 @@ func (c *SQLiteController) Initialize() error {
 		return fmt.Errorf("err executing %s: %w", createStmt, err)
 	}
 
-	// TODO the statement will need to be closed thus not sure if this is correct way to do that
-	c.insertStmt, err = c.pool.Prepare("insert into users(username, email, password, habits) values(?, ?, ?, ?)")
-	if err != nil {
-		return fmt.Errorf("failed prepare insert statement %w", err)
-	}
-
 	return nil
 }
 
 func (c SQLiteController) GetUserByName(name string) (UserModel, error) {
-	stmt, err := c.pool.Prepare("select email, password, habits from users where name = ?")
-	if err != nil {
-		// TODO move to init or this method will need to also return error
-		// return fmt.Errorf("failed prepare select statement %w", err)
-		return UserModel{}, fmt.Errorf("failed prepare select statement %w", err)
-	}
-	defer stmt.Close()
-
 	var userModel UserModel
-	if err := stmt.QueryRow().Scan(userModel); err != nil {
-		return UserModel{}, ErrUsernameDoesNotExist
+
+	err := c.pool.QueryRow("select email, password, habits from users where name = '?'", name).Scan(userModel)
+	if err != nil {
+		return UserModel{}, fmt.Errorf("failed prepare select statement %w", err)
 	}
 
 	return userModel, nil
 }
 
 func (c SQLiteController) CreateNewUser(user UserModel) (UserModel, error) {
+	insertStmt, err := c.pool.Prepare("insert into users(username, email, password, habits) values(?, ?, ?, ?)")
+	if err != nil {
+		return UserModel{}, fmt.Errorf("failed prepare insert statement %w", err)
+	}
+	defer insertStmt.Close()
+
+	_, err = insertStmt.Exec(user.Username, user.Email, user.Password, user.Habits)
+	if err != nil {
+		return UserModel{}, fmt.Errorf("failed execute insert statement %w", err)
+	}
+
 	return UserModel{}, nil
 }
 
 func (c SQLiteController) UpdateUserHabits(user UserModel, habits habit.TaskList) error {
+	_, err := c.pool.Exec(`update users set habits = ? where username == '?'`, habits, &user.Username)
+	if err != nil {
+		return fmt.Errorf("failed execute update statement %w", err)
+	}
+
 	return nil
 }
 
 func (c SQLiteController) GetUserHabits(user UserModel) (habit.TaskList, error) {
-	return habit.TaskList{}, nil
+	taskList := habit.TaskList{}
+
+	err := c.pool.QueryRow("select habits from users where name = '?'", user.Username).Scan(&taskList)
+	if err != nil {
+		return habit.TaskList{}, fmt.Errorf("failed execute select statement %w", err)
+	}
+
+	return taskList, nil
 }
 
 func (c SQLiteController) IsValid(user UserModel) bool {
-	return false
+	var exists bool
+
+	err := c.pool.QueryRow("select exists(select 1 from users where username = '?' and password = '?')",
+		user.Username, user.Password).Scan(&exists)
+	if err != nil {
+		return false
+	}
+
+	return exists
 }
