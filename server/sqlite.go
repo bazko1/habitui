@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
@@ -27,54 +28,63 @@ func (c *SQLiteController) Initialize() error {
 
 	c.pool = pool
 
-	// TODO: Not sure if i want jsonb or json for habits
 	createStmt := `
 	create table if not exists users (username text not null primary key,
 	email text,
 	password text,
-	habits jsonb
+	habits jsonb  
 	);
 	delete from users;
 	`
 
 	_, err = pool.Exec(createStmt)
 	if err != nil {
-		return fmt.Errorf("err executing %s: %w", createStmt, err)
+		return fmt.Errorf("Initialize err executing create statement: %w", err)
 	}
 
 	return nil
 }
 
 func (c SQLiteController) GetUserByName(name string) (UserModel, error) {
-	var userModel UserModel
+	var user UserModel
 
-	err := c.pool.QueryRow("select email, password, habits from users where name = '?'", name).Scan(userModel)
-	if err != nil {
-		return UserModel{}, fmt.Errorf("failed prepare select statement %w", err)
+	err := c.pool.QueryRow("select username, email, password, habits from users where username = ?",
+		name).Scan(&user.Username, &user.Email, &user.Password, &user.Habits)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return UserModel{}, ErrUsernameDoesNotExist
 	}
 
-	return userModel, nil
+	if err != nil {
+		return UserModel{}, fmt.Errorf("GetUserByName failed to execute select statement %w", err)
+	}
+
+	return user, nil
 }
 
 func (c SQLiteController) CreateNewUser(user UserModel) (UserModel, error) {
-	insertStmt, err := c.pool.Prepare("insert into users(username, email, password, habits) values(?, ?, ?, ?)")
+	res, err := c.pool.Exec("insert or ignore into users(username, email, password, habits) values(?, ?, ?, ?)",
+		user.Username, user.Email, user.Password, user.Habits)
 	if err != nil {
-		return UserModel{}, fmt.Errorf("failed prepare insert statement %w", err)
+		return UserModel{}, fmt.Errorf("CreateNewUser failed to execute insert statement %w", err)
 	}
-	defer insertStmt.Close()
 
-	_, err = insertStmt.Exec(user.Username, user.Email, user.Password, user.Habits)
+	affected, err := res.RowsAffected()
 	if err != nil {
-		return UserModel{}, fmt.Errorf("failed execute insert statement %w", err)
+		return UserModel{}, fmt.Errorf("CreateNewUser failed to check affected rows %w", err)
+	}
+
+	if affected == 0 {
+		return UserModel{}, ErrUsernameAlreadyExists
 	}
 
 	return UserModel{}, nil
 }
 
 func (c SQLiteController) UpdateUserHabits(user UserModel, habits habit.TaskList) error {
-	_, err := c.pool.Exec(`update users set habits = ? where username == '?'`, habits, &user.Username)
+	_, err := c.pool.Exec(`update users set habits == ? where username == ?`, habits, &user.Username)
 	if err != nil {
-		return fmt.Errorf("failed execute update statement %w", err)
+		return fmt.Errorf("UpdateUserHabits failed to execute update statement %w", err)
 	}
 
 	return nil
@@ -83,22 +93,26 @@ func (c SQLiteController) UpdateUserHabits(user UserModel, habits habit.TaskList
 func (c SQLiteController) GetUserHabits(user UserModel) (habit.TaskList, error) {
 	taskList := habit.TaskList{}
 
-	err := c.pool.QueryRow("select habits from users where name = '?'", user.Username).Scan(&taskList)
+	err := c.pool.QueryRow("select habits from users where username == ?", user.Username).Scan(&taskList)
 	if err != nil {
-		return habit.TaskList{}, fmt.Errorf("failed execute select statement %w", err)
+		return habit.TaskList{}, fmt.Errorf("GetUserHabits failed to execute select statement %w", err)
+	}
+
+	if taskList == nil {
+		taskList = habit.TaskList{}
 	}
 
 	return taskList, nil
 }
 
-func (c SQLiteController) IsValid(user UserModel) bool {
-	var exists bool
+func (c SQLiteController) IsValid(user UserModel) (bool, error) {
+	var exists int
 
-	err := c.pool.QueryRow("select exists(select 1 from users where username = '?' and password = '?')",
+	err := c.pool.QueryRow("select exists(select 1 from users where username = ? and password = ?)",
 		user.Username, user.Password).Scan(&exists)
 	if err != nil {
-		return false
+		return false, fmt.Errorf("IsValid failed to execute select statement %w", err)
 	}
 
-	return exists
+	return exists == 1, nil
 }

@@ -20,5 +20,5 @@ type Controller interface {
 	CreateNewUser(user UserModel) (UserModel, error)
 	UpdateUserHabits(user UserModel, habits habit.TaskList) error
 	GetUserHabits(user UserModel) (habit.TaskList, error)
-	IsValid(user UserModel) bool
+	IsValid(user UserModel) (bool, error)
 }

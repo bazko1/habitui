@@ -204,7 +204,11 @@ func handlePostUserLogin(controller Controller) http.HandlerFunc {
 			return
 		}
 
-		if !controller.IsValid(user) {
+		if valid, err := controller.IsValid(user); !valid {
+			if err != nil {
+				log.Printf("Error checking user valid: %v", err)
+			}
+
 			http.Error(w, ErrNonExistentUserOrPassword.Error(), http.StatusUnauthorized)
 
 			return

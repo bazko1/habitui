@@ -62,10 +62,10 @@ func (controller InMemoryController) GetUserHabits(user UserModel) (habit.TaskLi
 	return habit.TaskList{}, ErrNonExistentUserOrPassword
 }
 
-func (controller InMemoryController) IsValid(user UserModel) bool {
+func (controller InMemoryController) IsValid(user UserModel) (bool, error) {
 	u, exist := controller.users[user.Username]
 
-	return exist && u.Password == user.Password
+	return exist && u.Password == user.Password, nil
 }
 
 func (controller InMemoryController) GetUserByName(name string) (UserModel, error) {

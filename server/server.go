@@ -54,11 +54,21 @@ func WithControllerEngine(engineName string) Option {
 	}
 }
 
+// WitSqlitePath sets SQLiteController data source if controller engine is sqlite.
+func WitSqliteDataSource(dataSource string) Option {
+	return func(c *Config) error {
+		c.sqliteDataSource = dataSource
+
+		return nil
+	}
+}
+
 type Config struct {
 	host             string
 	port             int
 	readTimeout      time.Duration
 	controllerEngine string
+	sqliteDataSource string
 }
 
 func DefaultConfig() Config {
@@ -85,13 +95,17 @@ func New(opts ...Option) (*http.Server, error) {
 	case "inmem":
 		controller = NewInMemoryController()
 	case "sqlite":
-		controller = NewSQLiteController(sqliteDatasePathEnvName)
+		source := sqliteDatasePathEnvName
+		if c.sqliteDataSource != "" {
+			source = c.sqliteDataSource
+		}
+
+		controller = NewSQLiteController(source)
 	default:
 		return nil, errors.New("wrong controller engine provided")
 	}
 
-	err := controller.Initialize()
-	if err != nil {
+	if err := controller.Initialize(); err != nil {
 		return nil, fmt.Errorf("failed to initialize controller: %w", err)
 	}
 
