@@ -76,3 +76,7 @@ func (controller InMemoryController) GetUserByName(name string) (UserModel, erro
 
 	return u, nil
 }
+
+func (controller InMemoryController) Finalize() error {
+	return nil
+}

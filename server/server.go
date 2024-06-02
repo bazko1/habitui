@@ -117,5 +117,11 @@ func New(opts ...Option) (*http.Server, error) {
 		ReadTimeout: c.readTimeout,
 	}
 
+	// TODO: Will need to set different mechanism for graceful controller
+	// shutdown as this does not grant wait for finish.
+	server.RegisterOnShutdown(func() {
+		controller.Finalize()
+	})
+
 	return server, nil
 }

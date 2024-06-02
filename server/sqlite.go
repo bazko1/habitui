@@ -116,3 +116,11 @@ func (c SQLiteController) IsValid(user UserModel) (bool, error) {
 
 	return exists == 1, nil
 }
+
+func (c SQLiteController) Finalize() error {
+	if err := c.pool.Close(); err != nil {
+		return fmt.Errorf("Finalize sqlite db close error: %w", err)
+	}
+
+	return nil
+}

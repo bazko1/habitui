@@ -21,4 +21,5 @@ type Controller interface {
 	UpdateUserHabits(user UserModel, habits habit.TaskList) error
 	GetUserHabits(user UserModel) (habit.TaskList, error)
 	IsValid(user UserModel) (bool, error)
+	Finalize() error
 }

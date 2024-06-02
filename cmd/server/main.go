@@ -2,8 +2,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/bazko1/habitui/server"
@@ -29,12 +33,39 @@ func main() {
 	}
 
 	fmt.Println("Server is listening at:", server.Addr)
-	// TODO: Check if engine is one of "inmem", "sqlite"
 	fmt.Println("Using controller engine:", *controllerEngine)
 
-	if err := server.ListenAndServe(); err != nil {
-		fmt.Printf("Failed to listen and serve: %v", err)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-		return
+	serverServeError := make(chan error)
+	defer close(serverServeError)
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil {
+			serverServeError <- err
+
+			return
+		}
+	}()
+
+	for {
+		// one time check if errors occurred or continue
+		select {
+		case err := <-serverServeError:
+			fmt.Printf("Failed to listen and serve: %v\n", err)
+			os.Exit(1)
+		case <-sigs:
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+
+			if err := server.Shutdown(ctx); err != nil {
+				fmt.Printf("Failed to shutdown server gracefully: %v\n", err)
+				server.Close()
+			}
+			os.Exit(0)
+		default:
+			break
+		}
 	}
 }
