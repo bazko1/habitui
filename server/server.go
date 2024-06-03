@@ -80,12 +80,12 @@ func DefaultConfig() Config {
 	}
 }
 
-func New(opts ...Option) (*http.Server, error) {
+func New(opts ...Option) (*http.Server, func() error, error) {
 	c := DefaultConfig()
 
 	for _, opt := range opts {
 		if err := opt(&c); err != nil {
-			return nil, fmt.Errorf("option failed %w", err)
+			return nil, nil, fmt.Errorf("option failed %w", err)
 		}
 	}
 
@@ -102,11 +102,11 @@ func New(opts ...Option) (*http.Server, error) {
 
 		controller = NewSQLiteController(source)
 	default:
-		return nil, errors.New("wrong controller engine provided")
+		return nil, nil, errors.New("wrong controller engine provided")
 	}
 
 	if err := controller.Initialize(); err != nil {
-		return nil, fmt.Errorf("failed to initialize controller: %w", err)
+		return nil, nil, fmt.Errorf("failed to initialize controller: %w", err)
 	}
 
 	h := createHandler(controller)
@@ -117,11 +117,5 @@ func New(opts ...Option) (*http.Server, error) {
 		ReadTimeout: c.readTimeout,
 	}
 
-	// TODO: Will need to set different mechanism for graceful controller
-	// shutdown as this does not grant wait for finish.
-	server.RegisterOnShutdown(func() {
-		controller.Finalize()
-	})
-
-	return server, nil
+	return server, func() error { return controller.Finalize() }, nil
 }

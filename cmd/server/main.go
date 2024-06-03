@@ -20,7 +20,7 @@ func main() {
 	controllerEngine := flag.String("engine", server.DefaultControllerEngine, "engine to use for controller")
 	flag.Parse()
 
-	server, err := server.New(
+	server, finalizefn, err := server.New(
 		server.WithHost(*host),
 		server.WithPort(*port),
 		server.WithReadTimeout(time.Duration(*timeout)*time.Millisecond),
@@ -49,12 +49,21 @@ func main() {
 		}
 	}()
 
+	retCode := 0
+	defer func() { os.Exit(retCode) }()
+	defer func() {
+		if err := finalizefn(); err != nil {
+			fmt.Printf("Failed to finalize server: %v\n", err)
+		}
+	}()
+
+inner:
 	for {
-		// one time check if errors occurred or continue
 		select {
 		case err := <-serverServeError:
 			fmt.Printf("Failed to listen and serve: %v\n", err)
-			os.Exit(1)
+			retCode = 1
+			break inner
 		case <-sigs:
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
@@ -63,7 +72,7 @@ func main() {
 				fmt.Printf("Failed to shutdown server gracefully: %v\n", err)
 				server.Close()
 			}
-			os.Exit(0)
+			break inner
 		default:
 			break
 		}

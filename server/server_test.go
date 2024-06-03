@@ -29,8 +29,8 @@ func startServer(t *testing.T, controllerType string) net.Listener {
 	}
 
 	// TODO: For testing sqlite in parallel I would need separate database file for
-	// each controller.
-	server, err := New(WithControllerEngine(controllerType))
+	// each controller. Handle the finalize.
+	server, _, err := New(WithControllerEngine(controllerType))
 	if err != nil {
 		t.Fatalf("Failed to create new server error: %v", err)
 	}
