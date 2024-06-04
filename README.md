@@ -55,10 +55,17 @@ habitui -remote-password "$PASSWORD" -remote-user "$USER" -remote-server "http:/
 ```
 
 ## Serving data remotely
+You can use server tool for storing/serving your habit data via http rest api.<br>
 To install `habitui-server` binary in your GOPATH:
 ```
 go install github.com/bazko1/habitui/cmd/habitui-server@latest
 ```
+Currently remote server supports two types of controller inmem that stores all the data in memory and sqlite based.
 
 ## How it looks:
-![](demo.png "Main window")
+Main window:<br>
+<img src="./docs/tui.png" alt="Main window" width="1200"/>
+<br>Selection highlighting:<br>
+<img src="./docs/desc-select.png" alt="Main window" width="1200"/>
+<br>Editing task name:<br>
+<img src="./docs/edit.png" alt="Editing task name" width="1200"/>
