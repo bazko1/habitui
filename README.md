@@ -1,7 +1,7 @@
 # habittui
 This is my terminal application for managing daily habits.
-Rationale for this app is that I spend most of the day in terminal as my setup is neo-vim + tmux. 
-Having habit tracking app inside of terminal is more convenient for me than mobile or web app. 
+Rationale for this app is that I spend most of the day in terminal as my setup is neo-vim + tmux.
+Having habit tracking app inside of terminal is more convenient for me than mobile or web app.
 ## Initial project:
 The terminal will be split in at least 3 separate windows. Name window is used interchangeably as section.
 ```
@@ -29,12 +29,12 @@ j - Navigate up in current window, in Tasks windows this will highlight (or chan
 k - Navigate down in current windows, in Tasks windows. <br>
 l - Navigate to window right, for example from tasks to description window. This will somehow highlight (or color change) other window.  <br>
 h - Navigate to window left. <br>
-e - Edit data in current window. Allows to edit task short name or description.
-        After edit, user press enter and a pop up with confirm changes 'y/n' will come. <br>
+e - Edit data in current window. Allows to edit task short name or description.<br>
+        After edit, user press enter and a pop up with confirm changes 'y/n' will come. (confirm not yet implemented)  <br>
 a - add new task and move into task name/description edit mode. <br>
-d - Deletes currently selected task, a confirmation window will pop up. <br>
+d - Deletes currently selected task, a confirmation window will pop up. (pop up not yet implemented) <br>
 
-## Consistent state 
+## Consistent state
 Task and their changes are saved in json file by default its `.habitui.json`.
 
 ## Developement status
@@ -46,9 +46,19 @@ To install `habitui` binary in your GOPATH:
 go install github.com/bazko1/habitui/cmd/habitui@latest
 ```
 
-## Usage 
+## Usage
 Run `habitui`. <br>
-This lets you create new habits. If you do not provide `-data` flag data will be saved to `$HOME/.habitui.json`
+This lets you create new habits. If you do not provide `-data` flag data will be saved to `$HOME/.habitui.json`<br>
+Alternatively you can user remote server instead of local file:
+```
+habitui -remote-password "$PASSWORD" -remote-user "$USER" -remote-server "http://your-remote.com" -enable-remote
+```
+
+## Serving data remotely
+To install `habitui-server` binary in your GOPATH:
+```
+go install github.com/bazko1/habitui/cmd/habitui-server@latest
+```
 
 ## How it looks:
 ![](demo.png "Main window")

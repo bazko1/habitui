@@ -7,7 +7,7 @@ run-dev:
 run-remote:
 	go run cmd/habitui/main.go -remote-password "test" -remote-user "foo" -remote-server "http://localhost:3000" -enable-remote
 serve:
-	go run cmd/server/main.go
+	go run cmd/habitui-server/main.go
 serve-sqlite:
 	go run cmd/server/main.go -engine sqlite
 test:
@@ -18,3 +18,7 @@ gen-markdown:
 	pandoc README.md > README.html
 gen-testdata:
 	cd ./testdata/ && go run main.go
+build-client:
+	go build -o habitui cmd/habitui/main.go
+build-server:
+	go build -o habitui-server cmd/habitui-server/main.go

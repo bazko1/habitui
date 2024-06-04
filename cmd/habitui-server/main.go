@@ -20,6 +20,9 @@ func main() {
 	controllerEngine := flag.String("engine", server.DefaultControllerEngine, "engine to use for controller")
 	flag.Parse()
 
+	retCode := 0
+	defer func() { os.Exit(retCode) }()
+
 	server, finalizefn, err := server.New(
 		server.WithHost(*host),
 		server.WithPort(*port),
@@ -32,13 +35,19 @@ func main() {
 		return
 	}
 
+	defer func() {
+		if err := finalizefn(); err != nil {
+			fmt.Printf("Failed to finalize server: %v\n", err)
+		}
+	}()
+
 	fmt.Println("Server is listening at:", server.Addr)
 	fmt.Println("Using controller engine:", *controllerEngine)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	serverServeError := make(chan error)
+	serverServeError := make(chan error, 1)
 	defer close(serverServeError)
 
 	go func() {
@@ -49,30 +58,26 @@ func main() {
 		}
 	}()
 
-	retCode := 0
-	defer func() { os.Exit(retCode) }()
-	defer func() {
-		if err := finalizefn(); err != nil {
-			fmt.Printf("Failed to finalize server: %v\n", err)
-		}
-	}()
-
-inner:
 	for {
 		select {
 		case err := <-serverServeError:
 			fmt.Printf("Failed to listen and serve: %v\n", err)
+
 			retCode = 1
-			break inner
+
+			return
 		case <-sigs:
-			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			const shutdownTimeout = 10 * time.Second
+
+			ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 			defer cancel()
 
 			if err := server.Shutdown(ctx); err != nil {
 				fmt.Printf("Failed to shutdown server gracefully: %v\n", err)
 				server.Close()
 			}
-			break inner
+
+			return
 		default:
 			break
 		}

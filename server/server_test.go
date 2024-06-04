@@ -1,5 +1,5 @@
 // // nolint:forbidigo
-package server
+package server_test
 
 import (
 	"context"
@@ -8,15 +8,19 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/bazko1/habitui/habit"
+	"github.com/bazko1/habitui/server"
 )
 
-const testUserString = `{"Username":"foo","Email":"bar","Password":"test"}`
+const (
+	testUserString = `{"Username":"foo","Email":"bar","Password":"test"}`
+)
 
 var controllerTypes = [2]string{"inmem", "sqlite"}
 
@@ -28,9 +32,20 @@ func startServer(t *testing.T, controllerType string) net.Listener {
 		t.Fatalf("Failed to create new listener error: %v", err)
 	}
 
-	// TODO: For testing sqlite in parallel I would need separate database file for
-	// each controller. Handle the finalize.
-	server, _, err := New(WithControllerEngine(controllerType))
+	opts := []server.Option{server.WithControllerEngine(controllerType)}
+	// TODO: Handle tempfiles need to return mechanism for deleting them
+	if controllerType == "sqlite" {
+		file, err := os.CreateTemp(".", "*test.sqlite")
+		if err != nil {
+			t.Fatalf("Failed to create new file for sqldb: %v", err)
+		}
+
+		t.Cleanup(func() { os.Remove(file.Name()) })
+
+		opts = append(opts, server.WitSqliteDataSource(file.Name()))
+	}
+
+	server, _, err := server.New(opts...)
 	if err != nil {
 		t.Fatalf("Failed to create new server error: %v", err)
 	}
@@ -201,7 +216,7 @@ func TestUpdateUserTasks(t *testing.T) {
 				startDate = startDate.AddDate(0, 0, 1)
 			}
 
-			user := UserModel{}
+			user := server.UserModel{}
 			_ = json.Unmarshal([]byte(testUserString), &user)
 			user.Habits = habit.TaskList{task}
 

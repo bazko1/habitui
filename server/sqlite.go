@@ -34,7 +34,6 @@ func (c *SQLiteController) Initialize() error {
 	password text,
 	habits jsonb  
 	);
-	delete from users;
 	`
 
 	_, err = pool.Exec(createStmt)
