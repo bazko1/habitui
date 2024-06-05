@@ -33,7 +33,7 @@ func startServer(t *testing.T, controllerType string) net.Listener {
 	}
 
 	opts := []server.Option{server.WithControllerEngine(controllerType)}
-	// TODO: Handle tempfiles need to return mechanism for deleting them
+
 	if controllerType == "sqlite" {
 		file, err := os.CreateTemp(".", "*test.sqlite")
 		if err != nil {

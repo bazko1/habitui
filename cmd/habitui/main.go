@@ -49,7 +49,8 @@ func main() {
 	tasksFile := flag.String("data", "", "file name for loading/saving tasks data")
 	disableDebug := flag.Bool("no-debug", false, "do not log debug data to file")
 
-	remoteAddress := flag.String("remote-server", "localhost:3000", "address of remote server for loading saving tasks data")
+	remoteAddress := flag.String("remote-server", "localhost:3000",
+		"address of remote server for loading saving tasks data")
 	remoteUser := flag.String("remote-user", "", "username for remote login")
 	remotePassword := flag.String("remote-password", "", "password for remote login")
 	enableRemote := flag.Bool("enable-remote", false, "enable storing data into remote location")
@@ -78,13 +79,15 @@ func main() {
 		}
 	}
 
+	var remoteClient *client.HTTPClient
+
 	if *enableRemote {
 		if *remoteUser == "" || *remotePassword == "" {
 			fmt.Println("Username and password must be provided for remote connection.")
 			os.Exit(1)
 		}
 
-		remoteClient := client.HTTPClient{
+		remoteClient = &client.HTTPClient{
 			Address:  *remoteAddress,
 			Username: *remoteUser,
 			Password: *remotePassword,
@@ -124,16 +127,7 @@ func main() {
 	model, _ = out.(tui.Model)
 
 	defer func() {
-		if *enableRemote {
-			// TODO: Refactor to reuse previous remote client and
-			// it might be better as func arguments instead of
-			// methods on strucs - think about that.
-			remoteClient := client.HTTPClient{
-				Address:  *remoteAddress,
-				Username: *remoteUser,
-				Password: *remotePassword,
-			}
-
+		if remoteClient != nil {
 			if err := remoteClient.SaveUserTasks(model.Tasks()); err != nil {
 				logger.Printf("failed to save tasks to remote: %v", err)
 				os.Exit(1)

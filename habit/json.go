@@ -56,7 +56,7 @@ func (task Task) MarshalJSON() ([]byte, error) {
 	// all the fields. I might want to write un/marshaler that
 	// converts struct to map[string]any and loops over field
 	// names and capitalizes them so that I do not need to maintain
-	// both JSONTask and Task.
+	// both taskJSON and Task.
 
 	return bytes, nil
 }

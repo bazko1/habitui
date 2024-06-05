@@ -31,8 +31,6 @@ func (client HTTPClient) login() (string, int, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		// TODO: Will need to handle user creation differently. Probably I need
-		// special error from server that directly points that user does not exist.
 		return "", 0, fmt.Errorf("failed to login: %w", err)
 	}
 	defer resp.Body.Close()

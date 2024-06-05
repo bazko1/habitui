@@ -9,7 +9,7 @@ run-remote:
 serve:
 	go run cmd/habitui-server/main.go
 serve-sqlite:
-	go run cmd/server/main.go -engine sqlite
+	go run cmd/habitui-server//main.go -engine sqlite
 test:
 	go test -count=1 ./...
 test-race:

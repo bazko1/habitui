@@ -14,6 +14,8 @@ const (
 	DefaultControllerEngine                     = "inmem"
 )
 
+var ErrWrongOptionArgument = errors.New("incorrect argument provided")
+
 type Option func(*Config) error
 
 func WithHost(host string) Option {
@@ -102,7 +104,8 @@ func New(opts ...Option) (*http.Server, func() error, error) {
 
 		controller = NewSQLiteController(source)
 	default:
-		return nil, nil, errors.New("wrong controller engine provided")
+		return nil, nil, fmt.Errorf("wrong controller engine provided: %w",
+			ErrWrongOptionArgument)
 	}
 
 	if err := controller.Initialize(); err != nil {
@@ -117,5 +120,5 @@ func New(opts ...Option) (*http.Server, func() error, error) {
 		ReadTimeout: c.readTimeout,
 	}
 
-	return server, func() error { return controller.Finalize() }, nil
+	return server, controller.Finalize, nil
 }
