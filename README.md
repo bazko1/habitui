@@ -54,6 +54,23 @@ Alternatively you can user remote server instead of local file:
 habitui -remote-password "$PASSWORD" -remote-user "$USER" -remote-server "http://your-remote.com" -enable-remote
 ```
 
+### Client parameters
+```
+Usage of ./habitui:
+  -data string
+        file name for loading/saving tasks data
+  -enable-remote
+        enable storing data into remote location
+  -no-debug
+        do not log debug data to file
+  -remote-password string
+        password for remote login
+  -remote-server string
+        address of remote server for loading saving tasks data (default "localhost:3000")
+  -remote-user string
+        username for remote login
+```
+
 ## Serving data remotely
 You can use server tool for storing/serving your habit data via http rest api.<br>
 To install `habitui-server` binary in your GOPATH:
@@ -61,6 +78,19 @@ To install `habitui-server` binary in your GOPATH:
 go install github.com/bazko1/habitui/cmd/habitui-server@latest
 ```
 Currently remote server supports two types of controller inmem that stores all the data in memory and sqlite based.
+
+### Server parameters
+```
+Usage of ./habitui-server:
+  -engine string
+        engine to use for controller supported: 'inmem', 'sqlite' (default "inmem")
+  -hostname string
+        host name or ip to serve on (default "localhost")
+  -port int
+        port to serve on (default 3000)
+  -timeout int
+        read timeout milliseconds (default 100)
+```
 
 ## How it looks:
 Main window:<br>

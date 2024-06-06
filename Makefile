@@ -22,3 +22,7 @@ build-client:
 	go build -o habitui cmd/habitui/main.go
 build-server:
 	go build -o habitui-server cmd/habitui-server/main.go
+build: build-server build-client
+clean:
+	rm ./habitui
+	rm ./habitui-server

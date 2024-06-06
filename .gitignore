@@ -2,3 +2,5 @@
 Session.vim
 debug.log
 habitui.db
+/habitui
+/habitui-server

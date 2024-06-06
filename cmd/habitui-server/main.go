@@ -17,7 +17,9 @@ func main() {
 	host := flag.String("hostname", server.DefaultHost, "host name or ip to serve on")
 	port := flag.Int("port", server.DefaultPort, "port to serve on")
 	timeout := flag.Int64("timeout", server.DefaultReadTimeoutMiliseconds.Milliseconds(), "read timeout milliseconds")
-	controllerEngine := flag.String("engine", server.DefaultControllerEngine, "engine to use for controller")
+	controllerEngine := flag.String("engine", server.DefaultControllerEngine,
+		"engine to use for controller supported: 'inmem', 'sqlite'")
+
 	flag.Parse()
 
 	retCode := 0
