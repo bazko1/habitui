@@ -25,7 +25,7 @@ type Task struct {
 	// TODO: CurrentMonthBestStrike actually shows best strike ever that was finished in
 	// current month. I think I would like it to show best strikes in current month
 	// in a sense that it is value from 0-31.
-	bestStrikeThisMonth    int
+	strikeThisMonth        Strike
 	yearlyBestStrike       YearlyBestStrike
 	bestStrikeLastFinished time.Time
 }
@@ -42,17 +42,17 @@ func WithCustomTime(name, description string, getTime func() time.Time) Task {
 	}
 
 	return Task{
-		TaskVersionLatest,
-		name,
-		description,
-		getTime(),
-		getTime,
-		make(YearlyTaskCompletion),
-		time.Time{},
-		0,
-		0,
-		make(YearlyBestStrike),
-		time.Time{},
+		Version:                TaskVersionLatest,
+		Name:                   name,
+		Description:            description,
+		CreationDate:           getTime(),
+		GetTime:                getTime,
+		yearlyTaskCompletion:   make(YearlyTaskCompletion),
+		lastTimeCompleted:      time.Time{},
+		currentStrike:          0,
+		strikeThisMonth:        Strike{},
+		yearlyBestStrike:       make(YearlyBestStrike),
+		bestStrikeLastFinished: time.Time{},
 	}
 }
 

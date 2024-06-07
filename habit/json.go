@@ -17,7 +17,8 @@ type taskJSON struct {
 	YearlyTaskCompletion   YearlyTaskCompletion
 	LastTimeCompleted      time.Time
 	CurrentStrike          int
-	BestStrikeThisMonth    int
+	BestStrikeThisWeek     int
+	StrikeThisMonth        Strike
 	YearlyBestStrike       YearlyBestStrike
 	BestStrikeLastFinished time.Time
 }
@@ -38,16 +39,16 @@ func (task Task) MarshalJSON() ([]byte, error) {
 	}
 
 	bytes, err := json.Marshal(taskJSON{
-		task.Version,
-		task.Name,
-		task.Description,
-		task.CreationDate,
-		task.yearlyTaskCompletion,
-		task.lastTimeCompleted,
-		task.currentStrike,
-		task.bestStrikeThisMonth,
-		task.yearlyBestStrike,
-		task.bestStrikeLastFinished,
+		Version:                task.Version,
+		Name:                   task.Name,
+		Description:            task.Description,
+		CreationDate:           task.CreationDate,
+		YearlyTaskCompletion:   task.yearlyTaskCompletion,
+		LastTimeCompleted:      task.lastTimeCompleted,
+		CurrentStrike:          task.currentStrike,
+		StrikeThisMonth:        task.strikeThisMonth,
+		YearlyBestStrike:       task.yearlyBestStrike,
+		BestStrikeLastFinished: task.bestStrikeLastFinished,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal Task: %w", err)
