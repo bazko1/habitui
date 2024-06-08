@@ -2,6 +2,7 @@
 This is my terminal application for managing daily habits.
 Rationale for this app is that I spend most of the day in terminal as my setup is neo-vim + tmux.
 Having habit tracking app inside of terminal is more convenient for me than mobile or web app.
+
 ## Initial project:
 The terminal will be split in at least 3 separate windows. Name window is used interchangeably as section.
 ```
@@ -93,9 +94,22 @@ Usage of ./habitui-server:
 ```
 
 ## How it looks:
-Main window:<br>
+Main window no habits yet added:<br>
+<img src="./docs/nohabits.png" alt="No habits" width="1200"/>
+<br>Main window with habits:<br>
 <img src="./docs/tui.png" alt="Main window" width="1200"/>
 <br>Selection highlighting:<br>
 <img src="./docs/desc-select.png" alt="Main window" width="1200"/>
 <br>Editing task name:<br>
 <img src="./docs/edit.png" alt="Editing task name" width="1200"/>
+
+## Known issues and todos:
+ - Typing name or description that is longer than width can at point just before line break extend selection to whole line selecting text that shouldn't be selected. 
+ - If name or description is multi line the second line and subsequent lines will not take full box width.
+ - Depending on number of tasks or number of lines for task name or description the calendar can be spaced a bit differently and week day names are not in leveled with top box border.
+ - In some task number configuration current date has extra newline and is not directly over tui boxes.
+ - Best monthly strike implementation does not provide much information as it will show longest strike that was finished current month. <br>
+   If strike is over 31 days and was stopped this month then it will be displayed best strike whole month. <br>
+   It would make sense to reimplemented this logic so that it shows values from 0-31 counting strikes only during current month.
+  - I would like to add another controller for server supporting mongodb.
+  - Add possibility to being asked for remote password securely in cli instead of providing as command line argument.

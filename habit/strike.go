@@ -17,20 +17,33 @@ type Strike struct {
 	LastFinished time.Time
 }
 
+func NewStrike(t StrikeCountType) Strike {
+	return Strike{Type: t}
+}
+
 // Update updates strike data upon completion.
 func (s *Strike) Update(completeDate time.Time) {
 	if AreSameDates(completeDate, s.LastFinished) {
 		return
 	}
 
-	s.LastFinished = completeDate
 	if !s.IsContinued(completeDate) {
 		s.Count = 1
+	} else if AreSameDates(completeDate, s.LastFinished.AddDate(0, 0, 1)) {
+		s.Count++
 	}
 
 	if s.Count > s.Best {
 		s.Best = s.Count
 	}
+
+	s.LastFinished = completeDate
+}
+
+// Downgrade updates strike data when task is unmarked from completion.
+func (s *Strike) Downgrade(prevCompletion time.Time) {
+	s.Count--
+	s.LastFinished = prevCompletion
 }
 
 // IsContinued returns whether strike is broken assuming date is today
