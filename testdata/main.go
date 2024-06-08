@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	startDate := time.Date(2024, 3, 1, 12, 0, 0, 0, time.Local)
+	startDate := time.Date(2024, 2, 29, 12, 0, 0, 0, time.Local)
 	now := func() time.Time {
 		return startDate
 	}

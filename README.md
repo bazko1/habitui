@@ -103,6 +103,9 @@ Main window no habits yet added:<br>
 <br>Editing task name:<br>
 <img src="./docs/edit.png" alt="Editing task name" width="1200"/>
 
+### Demo
+<img src="./docs/demo.gif" alt="Demo" width="1200"/>
+
 ## Known issues and todos:
  - Typing name or description that is longer than width can at point just before line break extend selection to whole line selecting text that shouldn't be selected. 
  - If name or description is multi line the second line and subsequent lines will not take full box width.
