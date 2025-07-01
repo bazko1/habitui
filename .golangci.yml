@@ -1,22 +1,35 @@
+version: "2"
 linters:
-  enable-all: true
+  default: all
   disable:
     - depguard
-    - nosnakecase
-    - scopelint
-    - ifshort
-    - varcheck
-    - deadcode
-    - maligned
-    - interfacer
-    - golint
-    - exhaustivestruct
-    - structcheck
+    - exhaustruct
+    - godox
     - musttag
     - varnamelen
-    - godox
-    - exhaustruct
-
-linters-settings:
-  cyclop:
-    max-complexity: 12
+  settings:
+    cyclop:
+      max-complexity: 12
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

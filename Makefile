@@ -1,4 +1,4 @@
-
+default: build
 run:
 	@go run cmd/habitui/main.go
 run-dev:

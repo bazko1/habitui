@@ -106,6 +106,9 @@ Main window no habits yet added:<br>
 ### Demo
 <img src="./docs/demo.gif" alt="Demo" width="1200"/>
 
+## Things to do first
+ - [ ] Move demo to asciinema 
+ - [ ] Add popup or configuration that allows you to edit habit occurrence period (every day, two, n days, once a week / month, quarterly etc.
 ## Known issues and todos:
  - Typing name or description that is longer than width can at point just before line break extend selection to whole line selecting text that shouldn't be selected. 
  - If name or description is multi line the second line and subsequent lines will not take full box width.

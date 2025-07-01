@@ -1,0 +1,22 @@
+linters:
+  enable-all: true
+  disable:
+    - depguard
+    - nosnakecase
+    - scopelint
+    - ifshort
+    - varcheck
+    - deadcode
+    - maligned
+    - interfacer
+    - golint
+    - exhaustivestruct
+    - structcheck
+    - musttag
+    - varnamelen
+    - godox
+    - exhaustruct
+
+linters-settings:
+  cyclop:
+    max-complexity: 12
