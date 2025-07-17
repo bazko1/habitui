@@ -137,7 +137,7 @@ func (task *Task) MakeUnCompleted() {
 
 	if monthlyCompletions, exists := task.yearlyTaskCompletion[complDate.Year()]; exists {
 		monthly := monthlyCompletions[complDate.Month()]
-		if completionNum := len(monthly); completionNum > 0 && monthly[completionNum-1] == complDate {
+		if completionNum := len(monthly); completionNum > 0 && monthly[completionNum-1].Equal(complDate) {
 			monthlyCompletions[complDate.Month()] = monthly[:completionNum-1]
 
 			if completionNum > 1 {
@@ -148,7 +148,7 @@ func (task *Task) MakeUnCompleted() {
 
 	task.currentStrike--
 
-	if task.bestStrikeLastFinished == complDate {
+	if task.bestStrikeLastFinished.Equal(complDate) {
 		task.yearlyBestStrike[complDate.Year()][complDate.Month()] = task.currentStrike
 	}
 }

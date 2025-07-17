@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -223,7 +224,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 			model.editInput.Cursor.Blink = true
 
 		case key.Matches(msg, model.keys.Delete):
-			model.tasks = append(model.tasks[:model.cursorRow], model.tasks[model.cursorRow+1:]...)
+			model.tasks = slices.Delete(model.tasks, model.cursorRow, model.cursorRow+1)
 
 			if model.cursorRow > 0 {
 				model.cursorRow--
