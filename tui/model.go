@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bazko1/habitui/habit"
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -14,11 +13,13 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/muesli/reflow/wrap"
+
+	"github.com/bazko1/habitui/habit"
 )
 
 const (
 	sectionBoxWidth = 40
-	numWinCols      = 2
+	COLUMN_NUMBER   = 2
 )
 
 type Model struct {
@@ -196,7 +197,7 @@ func (model Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { //nolint: ireturn,
 			}
 
 		case key.Matches(msg, model.keys.Right):
-			if model.cursorCol < numWinCols && len(model.tasks) > 0 {
+			if model.cursorCol < COLUMN_NUMBER-1 && len(model.tasks) > 0 {
 				model.cursorCol++
 			}
 
